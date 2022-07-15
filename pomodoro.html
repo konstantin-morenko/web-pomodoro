@@ -36,10 +36,11 @@
 	padding: 4px;
 	border-bottom: solid 2px #ddd;
     }
-    #timer-intervals, #timer-control {
+    #timer-intervals, #timer-control, #timer-strike {
 	display: flex;
 	flex-direction: row;
 	justify-content: center;
+	align-items: center;
 	max-width: 500px;
 	margin: 16px auto;
     }
@@ -79,26 +80,86 @@
 	height: 6px;
 	border-radius: 3px;
     }
+    #strike-panel {
+	margin: 0 16px;
+    }
   </style>
 
   <script>
+    var alarm = {
+	audio: new Audio('alarm.mp3'),
+
+	play: function () {
+	    alarm.audio.loop = false;
+	    alarm.audio.play(); 
+	},
+	stop: function() {
+	    if(!alarm.audio.paused) {
+		alarm.audio.pause();
+		alarm.audio.currentTime = 0;
+	    }
+	}
+    }
     var intervals = {
 	"work": {
 	    len: 900,
-	    btn: "button-work"
+	    btn: "button-work",
+	    log: "Работа"
 	},
 	"short": {
 	    len: 300,
-	    btn: "button-short"
+	    btn: "button-short",
+	    log: "Короткий перерыв"
 	},
 	"long": {
 	    len: 1200,
-	    btn: "button-long"
+	    btn: "button-long",
+	    log: "Длинный перерыв"
 	}
     }
     var pomo = {
+	current: "",
+	strike: 0,
+	strike_max: 3,
+
 	set: function(name) {
+	    pomo.current = name;
 	    timer.set(intervals[name].len);
+	    btns = document.getElementById("timer-intervals").children;
+	    for(var i = 0; i < btns.length; i++) {
+		if(btns[i].id == intervals[name].btn) {
+		    btns[i].classList.add("active");
+		}
+		else {
+		    btns[i].classList.remove("active");
+		}
+	    }
+	    pomo.update_strike();
+	},
+	next: function() {
+	    if(pomo.current == "work") {
+		pomo.strike += 1;
+	    }
+	    if(pomo.current == "work") {
+		if(pomo.strike >= pomo.strike_max) {
+		    pomo.set("long");
+		}
+		else {
+		    pomo.set("short");
+		}
+	    }
+	    else if(pomo.current == "short" || pomo.current == "long") {
+		pomo.set("work");
+	    }
+	    pomo.update_strike();
+	},
+	update_strike: function() {
+	    document.getElementById("strike").innerHTML = pomo.strike;
+	    document.getElementById("strike-max").innerHTML = pomo.strike_max;
+	},
+	reset_strike: function() {
+	    pomo.strike = 0;
+	    update_strike();
 	}
     }
     var timer = {
@@ -108,11 +169,13 @@
 	jstimer: false,
 
 	reset: function () {
+	    timer.pause();
 	    timer.current = 0;
 	    timer.update();
 	},
 
 	set: function(time) {
+	    alarm.stop();
 	    timer.total = time;
 	    timer.reset();
 	},
@@ -125,22 +188,49 @@
 
 	    var string = (minutes > 9 ? "" : "0") + minutes + ":" + (seconds > 9 ? "" : "0") + seconds;
 	    timer_digital.innerHTML = string;
+
+	    document.getElementById("button-start").classList.remove("active");
+	    document.getElementById("button-pause").classList.remove("active");
+	    document.getElementById("button-reset").classList.remove("active");
+	    if(timer.jstimer) {
+		document.getElementById("button-start").classList.add("active");
+	    }
+	    else if(timer.current == 0) {
+		document.getElementById("button-reset").classList.add("active");
+	    }
+	    else {
+		document.getElementById("button-pause").classList.add("active");
+	    }
 	},
 	tick: function() {
 	    var left = timer.total - timer.current;
 	    if(left == 0) {
-		timer.pause();
+		timer.end();
 	    }
 	    timer.current += 1;
 	    timer.update();
 	},
 	start: function() {
-	    timer.jstimer = window.setInterval(timer.tick, 1000);
+	    alarm.stop();
+	    var left = timer.total - timer.current;
+	    if(left > 0) {
+		timer.jstimer = window.setInterval(timer.tick, 1000);
+	    }
+	    timer.update();
 	},
 	pause: function() {
 	    window.clearInterval(timer.jstimer);
+	    timer.jstimer = false;
+	    timer.update();
+	},
+	end: function(by_btn = false) {
+	    if(!by_btn) {
+		alarm.start();
+	    }
+	    pomo.next();
 	}
     }
+
   </script>
 
 </head>
@@ -150,9 +240,9 @@
     <header>Pomodoro Timer</header>
     <div id="timer-panel">
       <div id="timer-intervals">
-	<button onclick="pomo.set('work')">Работа</button>
-	<button>Короткий перерыв</button>
-	<button>Длинный перерыв</button>
+	<button id="button-work" onclick="pomo.set('work')">Работа</button>
+	<button id="button-short" onclick="pomo.set('short')">Короткий перерыв</button>
+	<button id="button-long" onclick="pomo.set('long')">Длинный перерыв</button>
       </div>
       <div id="timer-counter">
 	<div id="timer-counter-digital">
@@ -162,10 +252,14 @@
 	  <div id="timer-counter-progress" style="width:50%"></div>
 	</div>
       </div>
+      <div id="timer-strike">
+	<div id="strike-panel">Непрерывных: <span id="strike">X</span> из <span id="strike-max">Y</span></div><button>Сброс</button>
+      </div>
       <div id="timer-control">
-	<button onclick="timer.start()">Старт</button>
-	<button onclick="timer.pause()">Пауза</button>
-	<button>Сброс</button>
+	<button id="button-start" onclick="timer.start()">Старт</button>
+	<button id="button-pause" onclick="timer.pause()">Пауза</button>
+	<button id="button-reset" onclick="timer.reset()">Сброс</button>
+	<button onclick="timer.end(true)">Конец</button>
       </div>
     </div>
   </div>
@@ -177,6 +271,10 @@
   </div>
   <div id="config">
     <header>Настройки</header>
+    <button id="alarm-test" onclick="alarm.play()">Проверка сигнала</button>
   </div>
+  <script>
+    pomo.set("work");
+  </script>
 </body>
 </html>
