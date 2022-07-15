@@ -36,7 +36,7 @@
 	padding: 4px;
 	border-bottom: solid 2px #ddd;
     }
-    #timer-intervals, #timer-control, #timer-strike {
+    #timer-intervals, #timer-control, #timer-strike, #log-control {
 	display: flex;
 	flex-direction: row;
 	justify-content: center;
@@ -111,6 +111,66 @@
 	    }
 	}
     }
+
+    var log = {
+	data: [],
+	read: function() {
+	    log.data = JSON.parse(localStorage.getItem("log")) || [];
+	},
+	write: function() {
+	    localStorage.setItem("log", JSON.stringify(log.data));
+	},
+	clear: function(left = false) {
+	    if(left) {
+		log.data = log.data.filter(function(v) {return v.date >= left});
+	    }
+	    else {
+		log.data = [];
+	    }
+	    log.write();
+	    log.update();
+	},
+	clear_except_today: function() {
+	    var dt = new Date();
+	    var date = (dt.getYear() + 1900) + "-" + (dt.getMonth()+1 < 10 ? "0" : "") +
+		(dt.getMonth()+1) + "-" + (dt.getDate() < 10 ? "0" : "") + dt.getDate();
+	    log.clear(date);
+	},
+	add: function(start, end, type) {
+	    var dt = new Date();
+	    var date = (dt.getYear() + 1900) + "-" + (dt.getMonth()+1 < 10 ? "0" : "") +
+		(dt.getMonth()+1) + "-" + (dt.getDate() < 10 ? "0" : "") + dt.getDate();
+	    log.data.push({date: date, start: start, end: end, type: type});
+	    log.write();
+	},
+	update: function() {
+	    log.read();
+	    var pool = document.getElementById("log-content");
+	    pool.innerHTML = "";
+	    if(log.data.length == 0) {
+		var p = document.createElement("p");
+		p.innerHTML = "Нет данных";
+		pool.appendChild(p);
+	    }
+	    else {
+		var date = "";
+		for(var i = 0; i < log.data.length; i++) {
+		    if(date != log.data[i].date) {
+			var p = document.createElement("p");
+			p.innerHTML = log.data[i].date;
+			pool.appendChild(p);
+			date = log.data[i].date;
+		    }
+		    var p = document.createElement("p");
+		    p.innerHTML = log.data[i].start + "–"
+			+ log.data[i].end + " : "
+			+ log.data[i].type;
+		    pool.appendChild(p);
+		}
+	    }
+	}
+    }
+
     var intervals = {
 	"work": {
 	    len: 900,
@@ -178,6 +238,7 @@
 	current: 0,
 	count: false,
 	jstimer: false,
+	start_time: "",
 
 	reset: function () {
 	    timer.pause();
@@ -229,6 +290,7 @@
 		document.getElementById("button-pause").classList.add("active");
 	    }
 	    pomo.update_strike();
+	    log.update();
 	},
 	tick: function() {
 	    var left = timer.total - timer.current;
@@ -241,8 +303,18 @@
 	    }
 	    timer.update();
 	},
+	current_time: function() {
+	    var date = new Date();
+	    return (date.getHours()<10 ? "0" : "") +
+		date.getHours() + ":" +
+		(date.getMinutes()<10 ? "0" : "") +
+		date.getMinutes();
+	},
 	start: function() {
 	    var left = timer.total - timer.current;
+	    if(timer.current == 0) {
+		timer.start_time = timer.current_time();
+	    }
 	    if(left > 0) {
 		timer.jstimer = window.setInterval(timer.tick, 1000);
 	    }
@@ -257,6 +329,17 @@
 	    if(!by_btn) {
 		alarm.start();
 	    }
+	    var string = "";
+	    if(pomo.current == "work") {
+		string = "Работа";
+	    }
+	    else if(pomo.current == "short") {
+		string = "Короткий перерыв";
+	    }
+	    else if(pomo.current == "long") {
+		string = "Длинный перерыв";
+	    }
+	    log.add(timer.start_time, timer.current_time(), string);
 	    pomo.next();
 	}
     }
@@ -295,6 +378,12 @@
   </div>
   <div id="log">
     <header>Журнал</header>
+    <div id="log-content">
+    </div>
+    <div id="log-control">
+      <button onclick="log.clear()">Очистить журнал</button>
+      <button onclick="log.clear_except_today()">Кроме сегодня</button>
+    </div>
   </div>
   <div id="manual">
     <header>Инструкция</header>
