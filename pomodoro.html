@@ -1,0 +1,182 @@
+<!doctype html>
+
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <title>Pomodoro Timer</title>
+  <meta name="description" content="Simple Pomodoro Timer.">
+  <meta name="author" content="Konstantin Morenko">
+
+  <meta property="og:title" content="Pomodoro Timer">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="">
+  <meta property="og:description" content="Simple Pomodoro Timer">
+  <meta property="og:image" content="timer.png">
+
+  <link rel="icon" href="/favicon.ico">
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="/apple-touch-icon.png">
+
+  <style>
+    html {
+	background: #111;
+	color: #ddd;
+    }
+    body {
+	font-family: Liberation Sans, sans-serif;
+	max-width: 800px;
+	margin: 16px auto;
+	padding: 0 16px;
+    }
+    header {
+	font-size: 160%;
+	text-align: center;
+	padding: 4px;
+	border-bottom: solid 2px #ddd;
+    }
+    #timer-intervals, #timer-control {
+	display: flex;
+	flex-direction: row;
+	justify-content: center;
+	max-width: 500px;
+	margin: 16px auto;
+    }
+    button {
+	border: 3px solid #ddd;
+	border-radius: 16px;
+	color: #ddd;
+	background: #111;
+	height: 48px;
+	width: 120px;
+	margin: 16px;
+	display: block;
+    }
+    button.active {
+	background: #555;
+    }
+    button:hover {
+	background: #555;
+    }
+    button:active {
+	background: #999;
+    }
+    #timer-counter-digital {
+	font-size: 500%;
+	max-width: 350px;
+	margin: 16px auto;
+	text-align: center;
+    }
+    #timer-counter-scale {
+	width: 80%;
+	margin: 16px auto;
+	border-bottom: 1px solid #ddd;
+	border-radius: 3px;
+    }
+    #timer-counter-progress:empty {
+	background: #ddd;
+	height: 6px;
+	border-radius: 3px;
+    }
+  </style>
+
+  <script>
+    var intervals = {
+	"work": {
+	    len: 900,
+	    btn: "button-work"
+	},
+	"short": {
+	    len: 300,
+	    btn: "button-short"
+	},
+	"long": {
+	    len: 1200,
+	    btn: "button-long"
+	}
+    }
+    var pomo = {
+	set: function(name) {
+	    timer.set(intervals[name].len);
+	}
+    }
+    var timer = {
+	total: 0,
+	current: 0,
+	count: false,
+	jstimer: false,
+
+	reset: function () {
+	    timer.current = 0;
+	    timer.update();
+	},
+
+	set: function(time) {
+	    timer.total = time;
+	    timer.reset();
+	},
+	update: function() {
+	    var timer_digital = document.getElementById("timer-counter-digital");
+
+	    var left = timer.total - timer.current;
+	    var minutes = Math.floor(left / 60);
+	    var seconds = left - minutes * 60;
+
+	    var string = (minutes > 9 ? "" : "0") + minutes + ":" + (seconds > 9 ? "" : "0") + seconds;
+	    timer_digital.innerHTML = string;
+	},
+	tick: function() {
+	    var left = timer.total - timer.current;
+	    if(left == 0) {
+		timer.pause();
+	    }
+	    timer.current += 1;
+	    timer.update();
+	},
+	start: function() {
+	    timer.jstimer = window.setInterval(timer.tick, 1000);
+	},
+	pause: function() {
+	    window.clearInterval(timer.jstimer);
+	}
+    }
+  </script>
+
+</head>
+
+<body>
+  <div id="timer">
+    <header>Pomodoro Timer</header>
+    <div id="timer-panel">
+      <div id="timer-intervals">
+	<button onclick="pomo.set('work')">Работа</button>
+	<button>Короткий перерыв</button>
+	<button>Длинный перерыв</button>
+      </div>
+      <div id="timer-counter">
+	<div id="timer-counter-digital">
+	  00:00
+	</div>
+	<div id="timer-counter-scale">
+	  <div id="timer-counter-progress" style="width:50%"></div>
+	</div>
+      </div>
+      <div id="timer-control">
+	<button onclick="timer.start()">Старт</button>
+	<button onclick="timer.pause()">Пауза</button>
+	<button>Сброс</button>
+      </div>
+    </div>
+  </div>
+  <div id="log">
+    <header>Журнал</header>
+  </div>
+  <div id="manual">
+    <header>Инструкция</header>
+  </div>
+  <div id="config">
+    <header>Настройки</header>
+  </div>
+</body>
+</html>
