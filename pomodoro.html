@@ -83,6 +83,13 @@
     #strike-panel {
 	margin: 0 16px;
     }
+    #log-content .date {
+	font-style: italic;
+	text-decoration: underline;
+    }
+    #log-content .record {
+	margin-left: 30px;
+    }
     #keybindings {
     }
     #keybindings .key {
@@ -122,9 +129,11 @@
 	},
 	clear: function(left = false) {
 	    if(left) {
+		if(!confirm("Очистить журнал до " + left + "?")) { return; }
 		log.data = log.data.filter(function(v) {return v.date >= left});
 	    }
 	    else {
+		if(!confirm("Очистить ВЕСЬ журнал?")) { return; }
 		log.data = [];
 	    }
 	    log.write();
@@ -157,11 +166,13 @@
 		for(var i = 0; i < log.data.length; i++) {
 		    if(date != log.data[i].date) {
 			var p = document.createElement("p");
+			p.classList.add("date");
 			p.innerHTML = log.data[i].date;
 			pool.appendChild(p);
 			date = log.data[i].date;
 		    }
 		    var p = document.createElement("p");
+		    p.classList.add("record");
 		    p.innerHTML = log.data[i].start + "–"
 			+ log.data[i].end + " : "
 			+ log.data[i].type;
@@ -194,6 +205,9 @@
 	strike_max: 3,
 
 	set: function(name) {
+	    if(timer.current != 0) {
+		if(!confirm("Сбросить таймер?")) { return; }
+	    }
 	    pomo.current = name;
 	    timer.set(intervals[name].len);
 	    btns = document.getElementById("timer-intervals").children;
@@ -229,6 +243,7 @@
 	    document.getElementById("strike-max").innerHTML = pomo.strike_max;
 	},
 	reset_strike: function() {
+	    if(!confirm("Сбросить счетчик страйков?")) { return; }
 	    pomo.strike = 0;
 	    pomo.update_strike();
 	}
