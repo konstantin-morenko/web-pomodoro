@@ -83,20 +83,31 @@
     #strike-panel {
 	margin: 0 16px;
     }
+    #keybindings {
+    }
+    #keybindings .key {
+	border: 1px solid #ddd;
+	border-radius: 4px;
+	padding: 6px;
+	margin: 0 16px;
+	min-width: 18px;
+	display: inline-block;
+	text-align: center;
+    }
   </style>
 
   <script>
     var alarm = {
 	audio: new Audio('alarm.mp3'),
 
-	play: function () {
+	start: function () {
+	    alarm.audio.currentTime = 0;
 	    alarm.audio.loop = false;
 	    alarm.audio.play(); 
 	},
 	stop: function() {
 	    if(!alarm.audio.paused) {
 		alarm.audio.pause();
-		alarm.audio.currentTime = 0;
 	    }
 	}
     }
@@ -159,7 +170,7 @@
 	},
 	reset_strike: function() {
 	    pomo.strike = 0;
-	    update_strike();
+	    pomo.update_strike();
 	}
     }
     var timer = {
@@ -175,7 +186,6 @@
 	},
 
 	set: function(time) {
-	    alarm.stop();
 	    timer.total = time;
 	    timer.reset();
 	},
@@ -189,6 +199,23 @@
 	    var string = (minutes > 9 ? "" : "0") + minutes + ":" + (seconds > 9 ? "" : "0") + seconds;
 	    timer_digital.innerHTML = string;
 
+	    var perc = (timer.current / timer.total) * 100;
+	    document.getElementById("timer-counter-progress").style = "width: " + perc + "%";
+
+	    var title = "";
+	    title += string + " | ";
+	    if(pomo.current == "work") {
+		title += "Работа";
+	    }
+	    else if(pomo.current == "short") {
+		title += "Короткий";
+	    }
+	    else if(pomo.current == "long") {
+		title += "Длинный";
+	    }
+	    title += " | Pomodoro Timer";
+	    document.title = title;
+
 	    document.getElementById("button-start").classList.remove("active");
 	    document.getElementById("button-pause").classList.remove("active");
 	    document.getElementById("button-reset").classList.remove("active");
@@ -201,17 +228,20 @@
 	    else {
 		document.getElementById("button-pause").classList.add("active");
 	    }
+	    pomo.update_strike();
 	},
 	tick: function() {
 	    var left = timer.total - timer.current;
 	    if(left == 0) {
+		timer.pause();
 		timer.end();
 	    }
-	    timer.current += 1;
+	    else {
+		timer.current += 1;
+	    }
 	    timer.update();
 	},
 	start: function() {
-	    alarm.stop();
 	    var left = timer.total - timer.current;
 	    if(left > 0) {
 		timer.jstimer = window.setInterval(timer.tick, 1000);
@@ -253,7 +283,7 @@
 	</div>
       </div>
       <div id="timer-strike">
-	<div id="strike-panel">Непрерывных: <span id="strike">X</span> из <span id="strike-max">Y</span></div><button>Сброс</button>
+	<div id="strike-panel">Непрерывных: <span id="strike">X</span> из <span id="strike-max">Y</span></div><button onclick="pomo.reset_strike()">Сброс</button>
       </div>
       <div id="timer-control">
 	<button id="button-start" onclick="timer.start()">Старт</button>
@@ -268,13 +298,60 @@
   </div>
   <div id="manual">
     <header>Инструкция</header>
+    <div id="keybindings">
+      <p><span class="key">q</span>Работа</p>
+      <p><span class="key">w</span>Короткий перерыв</p>
+      <p><span class="key">e</span>Длинный перерыв</p>
+      <p><span class="key">space</span>Старт / пауза</p>
+      <p><span class="key">a</span>Старт</p>
+      <p><span class="key">s</span>Пауза</p>
+      <p><span class="key">d</span>Сброс таймера</p>
+      <p><span class="key">f</span>Конец</p>
+      <p><span class="key">r</span>Сброс страйка</p>
+    </dl>
   </div>
   <div id="config">
     <header>Настройки</header>
-    <button id="alarm-test" onclick="alarm.play()">Проверка сигнала</button>
+    <button id="alarm-test" onclick="alarm.start()">Проверка сигнала</button>
   </div>
   <script>
     pomo.set("work");
+
+    window.onkeydown = function(e){
+        if(e.keyCode == 81){ // q -> work
+	    pomo.set("work");
+        }
+        if(e.keyCode == 87){ // w -> short
+	    pomo.set("short");
+        }
+        if(e.keyCode == 69){ // e -> long
+	    pomo.set("long");
+        }
+        if(e.keyCode == 65){ // a -> start
+	    timer.start();
+        }
+        if(e.keyCode == 83){ // s -> pause
+	    timer.pause();
+        }
+        if(e.keyCode == 68){ // d -> reset timer
+	    timer.reset();
+        }
+        if(e.keyCode == 70){ // f -> end
+	    timer.end();
+        }
+        if(e.keyCode == 32){ // space -> start/pause
+	    e.preventDefault();
+	    if(timer.jstimer) {
+		timer.pause();
+	    }
+	    else {
+		timer.start();
+	    }
+        }
+        if(e.keyCode == 82){ // r -> reset strike
+	    pomo.reset_strike();
+        }
+    }
   </script>
 </body>
 </html>
