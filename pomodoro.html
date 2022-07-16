@@ -129,99 +129,60 @@
 	    alarm.audio.play(); 
 	},
 	stop: function() {
-	    if(!alarm.audio.paused) {
-		alarm.audio.pause();
-	    }
+	    alarm.audio.pause();
 	}
     }
 
-    var intervals = {}
-    var pomo = {
-	current: "",
-	strike: 0,
-	strike_max: 3,
-
-	set: function(name) {
-	    if(timer.current != 0) {
-		if(!confirm("Сбросить таймер?")) { return; }
-	    }
-	    pomo.current = name;
-	    timer.set(intervals[name].len);
-	    btns = document.getElementById("timer-intervals").children;
-	    for(var i = 0; i < btns.length; i++) {
-		if(btns[i].id == intervals[name].btn) {
-		    btns[i].classList.add("active");
-		}
-		else {
-		    btns[i].classList.remove("active");
-		}
-	    }
-	    pomo.update_strike();
-	},
-	next: function() {
-	    if(pomo.current == "work") {
-		pomo.strike += 1;
-	    }
-	    if(pomo.current == "work") {
-		if(pomo.strike >= pomo.strike_max) {
-		    pomo.set("long");
-		}
-		else {
-		    pomo.set("short");
-		}
-	    }
-	    else if(pomo.current == "short" || pomo.current == "long") {
-		pomo.set("work");
-	    }
-	    pomo.update_strike();
-	},
-	update_strike: function() {
-	    document.getElementById("strike").innerHTML = pomo.strike;
-	    document.getElementById("strike-max").innerHTML = pomo.strike_max;
-	},
-	reset_strike: function() {
-	    if(!confirm("Сбросить счетчик страйков?")) { return; }
-	    pomo.strike = 0;
-	    pomo.update_strike();
-	}
-    }
-    var config = {
-	read: function() {
-	    intervals = JSON.parse(localStorage.getItem("intervals")) || {
-		"work": {
-		    len: 900,
-		    btn: "button-work",
-		    log: "Работа"
-		},
-		"short": {
-		    len: 300,
-		    btn: "button-short",
-		    log: "Короткий перерыв"
-		},
-		"long": {
-		    len: 1200,
-		    btn: "button-long",
-		    log: "Длинный перерыв"
-		},
-	    };
-	},
-	write: function() {
-	    localStorage.setItem("intervals", JSON.stringify(intervals));
-	}
-    }
     var timer = {
-	total: 0,
-	current: 0,
+	time_total: 0,
+	time_current: 0,
+	strike_current: 0,
+	strike_max: 3,
 	jstimer: false,
 	start_time: "",
-
+	_current: "",
+	_intervals: {
+	    "work": 900,
+	    "short": 300,
+	    "long": 1200
+	},
+	load: function() {
+	},
+	save: function() {
+	},
+	windup: function(name) {
+	    timer._current = name;
+	    timer.set(timer._intervals[name]);
+	    if(name == "work") {
+		timer._update_buttons("timer-intervals", "button-work");
+	    }
+	    else if(name == "short") {
+		timer._update_buttons("timer-intervals", "button-short");
+	    }
+	    if(name == "long") {
+		timer._update_buttons("timer-intervals", "button-long");
+	    }
+	},
+	next: function() {
+	    if(timer._current == "work") {
+		if(timer.strike_current >= timer.strike_max) {
+		    timer.windup("long");
+		}
+		else {
+		    timer.windup("short");
+		}
+	    }
+	    else if(timer._current == "short" || timer._current == "long") {
+		timer.windup("work");
+	    }
+	},
 	reset: function() {
 	    timer._reset();
 	    timer.update();
 	},
 	_reset: function () {
 	    timer.pause();
-	    timer.current = 0;
+	    timer.time_current = 0;
 	},
 	set: function(time) {
 	    timer._set(time);
@@ -229,26 +190,26 @@
 	},
 	    
 	_set: function(time) {
-	    timer.total = time;
+	    timer.time_total = time;
 	    timer._reset();
 	},
 	_update_title: function() {
 	    var title = "";
 	    title += timer._countdown() + " | ";
-	    if(pomo.current == "work") {
+	    if(timer._current == "work") {
 		title += "Работа";
 	    }
-	    else if(pomo.current == "short") {
+	    else if(timer._current == "short") {
 		title += "Короткий";
 	    }
-	    else if(pomo.current == "long") {
+	    else if(timer._current == "long") {
 		title += "Длинный";
 	    }
 	    title += " | Pomodoro Timer";
 	    document.title = title;
 	},
 	_countdown: function() {
-	    var left = timer.total - timer.current;
+	    var left = timer.time_total - timer.time_current;
 	    var minutes = Math.floor(left / 60);
 	    var seconds = left - minutes * 60;
 
@@ -275,40 +236,39 @@
 	    if(timer.jstimer) {
 		return 'active';
 	    }
-	    else if(timer.current == 0) {
+	    else if(timer.time_current == 0) {
 		return 'reset';
 	    }
 	    else {
 		return 'paused';
 	    }
 	},
-	update: function() {
-	    var timer_digital = document.getElementById("timer-counter-digital");
-
-
-	    timer_digital.innerHTML = timer._countdown();
-
-	    var perc = (timer.current / timer.total) * 100;
+	_update_progress: function() {
+	    var perc = (timer.time_current / timer.time_total) * 100;
 	    document.getElementById("timer-counter-progress").style = "width: " + perc + "%";
-
+	},
+	update: function() {
+	    document.getElementById("timer-counter-digital").innerHTML = timer._countdown();
+	    timer._update_progress();
 	    timer._update_title();
-	    var active = false;
+
 	    if(timer._state() == 'active') {
-		active = "button-start";
+		timer._update_buttons("timer-control", "button-start");
 	    }
 	    else if(timer._state() == 'reset') {
-		active = "button-reset";
+		timer._update_buttons("timer-control", "button-reset");
 	    }
 	    else if(timer._state() == 'paused') {
-		active = "button-pause";
+		timer._update_buttons("timer-control", "button-pause");
 	    }
-	    timer._update_buttons("timer-control", active);
-
-
-	    pomo.update_strike();
+	    timer._update_strike();
+	},
+	_update_strike: function() {
+	    document.getElementById("strike").innerHTML = timer.strike_current;
+	    document.getElementById("strike-max").innerHTML = timer.strike_max;
 	},
 	_left: function() {
-	    return timer.total - timer.current;
+	    return timer.time_total - timer.time_current;
 	},
 	_tick: function() {
 	    if(timer._left() == 0) {
@@ -316,7 +276,7 @@
 		timer.end();
 	    }
 	    else {
-		timer.current += 1;
+		timer.time_current += 1;
 	    }
 	    timer.update();
 	},
@@ -328,7 +288,7 @@
 		date.getMinutes();
 	},
 	start: function() {
-	    if(timer.current == 0) {
+	    if(timer.time_current == 0) {
 		timer.start_time = timer._current_time();
 	    }
 	    if(timer._left() > 0) {
@@ -345,9 +305,25 @@
 	    if(!by_btn) {
 		alarm.start();
 	    }
-	    pomo.next();
+	    if(timer._current == "work") {
+		timer.strike_current += 1;
+	    }
+	    else if(timer._current == "long") {
+		timer.strike_current = 0;
+	    }
+	    timer.next();
 	}
     }
+    // var strike = {
+    // 	current: 0,
+    // 	max: 0,
+
+    // 	init: function(max) {},
+    // 	add: function() {},
+    // 	reset: function() {},
+    // 	is_ready: function() {}
+    // }
+
   </script>
 
 </head>
@@ -357,9 +333,9 @@
     <header>Pomodoro Timer</header>
     <div id="timer-panel">
       <div id="timer-intervals">
-	<button id="button-work" onclick="pomo.set('work')">Работа</button>
-	<button id="button-short" onclick="pomo.set('short')">Короткий перерыв</button>
-	<button id="button-long" onclick="pomo.set('long')">Длинный перерыв</button>
+	<button id="button-work" onclick="timer.windup('work')">Работа</button>
+	<button id="button-short" onclick="timer.windup('short')">Короткий перерыв</button>
+	<button id="button-long" onclick="timer.windup('long')">Длинный перерыв</button>
       </div>
       <div id="timer-counter">
 	<div id="timer-counter-digital">
@@ -370,7 +346,7 @@
 	</div>
       </div>
       <div id="timer-strike">
-	<div id="strike-panel">Непрерывных: <span id="strike">X</span> из <span id="strike-max">Y</span></div><button onclick="pomo.reset_strike()">Сброс</button>
+	<div id="strike-panel">Непрерывных: <span id="strike">X</span> из <span id="strike-max">Y</span></div><button onclick="">Сброс</button>
       </div>
       <div id="timer-control">
 	<button id="button-start" onclick="timer.start()">Старт</button>
@@ -381,8 +357,8 @@
     </div>
   </div>
   <script>
-    config.read();
-    pomo.set("work");
+    timer.load();
+    timer.windup("work");
   </script>
 </body>
 </html>
