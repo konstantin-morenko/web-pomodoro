@@ -205,7 +205,7 @@
 	strike_max: 3,
 
 	set: function(name) {
-	    if(timer.current != 0) {
+	    if(timer.current != 0 && timer.current != timer.total) {
 		if(!confirm("Сбросить таймер?")) { return; }
 	    }
 	    pomo.current = name;
