@@ -223,9 +223,6 @@
 	},
 	next: function() {
 	    if(pomo.current == "work") {
-		pomo.strike += 1;
-	    }
-	    if(pomo.current == "work") {
 		if(pomo.strike >= pomo.strike_max) {
 		    pomo.set("long");
 		}
@@ -344,6 +341,13 @@
 	    if(!by_btn) {
 		alarm.start();
 	    }
+	    if(pomo.current == "work") {
+		pomo.strike += 1;
+	    }
+	    else if(pomo.current == "long") {
+		pomo.strike = 0;
+	    }
+
 	    var string = "";
 	    if(pomo.current == "work") {
 		string = "Работа";
