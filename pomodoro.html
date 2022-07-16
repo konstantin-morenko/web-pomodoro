@@ -101,6 +101,21 @@
 	display: inline-block;
 	text-align: center;
     }
+    #config .parameter {
+	border-radius: 5px;
+	display: flex;
+	flex-direction: row;
+	align-items: center;
+	padding: 0 16px;
+    }
+    #config .parameter .name {
+	margin: 0 16px;
+    }
+    #config .parameter button {
+	width: 32px;
+	height: 32px;
+	border-radius: 8px;
+    }
   </style>
 
   <script>
@@ -182,23 +197,7 @@
 	}
     }
 
-    var intervals = {
-	"work": {
-	    len: 900,
-	    btn: "button-work",
-	    log: "Работа"
-	},
-	"short": {
-	    len: 300,
-	    btn: "button-short",
-	    log: "Короткий перерыв"
-	},
-	"long": {
-	    len: 1200,
-	    btn: "button-long",
-	    log: "Длинный перерыв"
-	}
-    }
+    var intervals = {}
     var pomo = {
 	current: "",
 	strike: 0,
@@ -246,6 +245,30 @@
 	    if(!confirm("Сбросить счетчик страйков?")) { return; }
 	    pomo.strike = 0;
 	    pomo.update_strike();
+	}
+    }
+    var config = {
+	read: function() {
+	    intervals = JSON.parse(localStorage.getItem("intervals")) || {
+		"work": {
+		    len: 900,
+		    btn: "button-work",
+		    log: "Работа"
+		},
+		"short": {
+		    len: 300,
+		    btn: "button-short",
+		    log: "Короткий перерыв"
+		},
+		"long": {
+		    len: 1200,
+		    btn: "button-long",
+		    log: "Длинный перерыв"
+		},
+	    };
+	},
+	write: function() {
+	    localStorage.setItem("intervals", JSON.stringify(intervals));
 	}
     }
     var timer = {
@@ -417,8 +440,15 @@
   <div id="config">
     <header>Настройки</header>
     <button id="alarm-test" onclick="alarm.start()">Проверка сигнала</button>
+    <div class="parameter">
+      <div class="name">Работа</div>
+      <button>+</button>
+      <div class="value">15 мин</div>
+      <button>-</button>
+    </div>
   </div>
   <script>
+    config.read();
     pomo.set("work");
 
     window.onkeydown = function(e){
