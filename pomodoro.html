@@ -119,6 +119,7 @@
   </style>
 
   <script>
+
     var alarm = {
 	audio: new Audio('alarm.mp3'),
 
@@ -130,69 +131,6 @@
 	stop: function() {
 	    if(!alarm.audio.paused) {
 		alarm.audio.pause();
-	    }
-	}
-    }
-
-    var log = {
-	data: [],
-	read: function() {
-	    log.data = JSON.parse(localStorage.getItem("log")) || [];
-	},
-	write: function() {
-	    localStorage.setItem("log", JSON.stringify(log.data));
-	},
-	clear: function(left = false) {
-	    if(left) {
-		if(!confirm("Очистить журнал до " + left + "?")) { return; }
-		log.data = log.data.filter(function(v) {return v.date >= left});
-	    }
-	    else {
-		if(!confirm("Очистить ВЕСЬ журнал?")) { return; }
-		log.data = [];
-	    }
-	    log.write();
-	    log.update();
-	},
-	clear_except_today: function() {
-	    var dt = new Date();
-	    var date = (dt.getYear() + 1900) + "-" + (dt.getMonth()+1 < 10 ? "0" : "") +
-		(dt.getMonth()+1) + "-" + (dt.getDate() < 10 ? "0" : "") + dt.getDate();
-	    log.clear(date);
-	},
-	add: function(start, end, type) {
-	    var dt = new Date();
-	    var date = (dt.getYear() + 1900) + "-" + (dt.getMonth()+1 < 10 ? "0" : "") +
-		(dt.getMonth()+1) + "-" + (dt.getDate() < 10 ? "0" : "") + dt.getDate();
-	    log.data.push({date: date, start: start, end: end, type: type});
-	    log.write();
-	},
-	update: function() {
-	    log.read();
-	    var pool = document.getElementById("log-content");
-	    pool.innerHTML = "";
-	    if(log.data.length == 0) {
-		var p = document.createElement("p");
-		p.innerHTML = "Нет данных";
-		pool.appendChild(p);
-	    }
-	    else {
-		var date = "";
-		for(var i = 0; i < log.data.length; i++) {
-		    if(date != log.data[i].date) {
-			var p = document.createElement("p");
-			p.classList.add("date");
-			p.innerHTML = log.data[i].date;
-			pool.appendChild(p);
-			date = log.data[i].date;
-		    }
-		    var p = document.createElement("p");
-		    p.classList.add("record");
-		    p.innerHTML = log.data[i].start + "–"
-			+ log.data[i].end + " : "
-			+ log.data[i].type;
-		    pool.appendChild(p);
-		}
 	    }
 	}
     }
@@ -274,35 +212,29 @@
     var timer = {
 	total: 0,
 	current: 0,
-	count: false,
 	jstimer: false,
 	start_time: "",
 
-	reset: function () {
-	    timer.pause();
-	    timer.current = 0;
+	reset: function() {
+	    timer._reset();
 	    timer.update();
 	},
-
-	set: function(time) {
-	    timer.total = time;
-	    timer.reset();
+	_reset: function () {
+	    timer.pause();
+	    timer.current = 0;
 	},
-	update: function() {
-	    var timer_digital = document.getElementById("timer-counter-digital");
-
-	    var left = timer.total - timer.current;
-	    var minutes = Math.floor(left / 60);
-	    var seconds = left - minutes * 60;
-
-	    var string = (minutes > 9 ? "" : "0") + minutes + ":" + (seconds > 9 ? "" : "0") + seconds;
-	    timer_digital.innerHTML = string;
-
-	    var perc = (timer.current / timer.total) * 100;
-	    document.getElementById("timer-counter-progress").style = "width: " + perc + "%";
-
+	set: function(time) {
+	    timer._set(time);
+	    timer.update();
+	},
+	    
+	_set: function(time) {
+	    timer.total = time;
+	    timer._reset();
+	},
+	_update_title: function() {
 	    var title = "";
-	    title += string + " | ";
+	    title += timer._countdown() + " | ";
 	    if(pomo.current == "work") {
 		title += "Работа";
 	    }
@@ -314,25 +246,72 @@
 	    }
 	    title += " | Pomodoro Timer";
 	    document.title = title;
+	},
+	_countdown: function() {
+	    var left = timer.total - timer.current;
+	    var minutes = Math.floor(left / 60);
+	    var seconds = left - minutes * 60;
 
-	    document.getElementById("button-start").classList.remove("active");
-	    document.getElementById("button-pause").classList.remove("active");
-	    document.getElementById("button-reset").classList.remove("active");
+	    var string = (minutes > 9 ? "" : "0") +
+		minutes + ":" +
+		(seconds > 9 ? "" : "0") + seconds;
+	    return string;
+	},
+	_update_buttons: function(block, active = false, cls = "active") {
+	    // turn off all buttons in block except active
+	    btns = document.getElementById(block).children;
+	    for(var i = 0; i < btns.length; i++) {
+		if(active) {
+		    if(btns[i].id == active) {
+			btns[i].classList.add(cls);
+		    }
+		    else {
+			btns[i].classList.remove(cls);
+		    }
+		}
+	    }
+	},
+	_state: function() {
 	    if(timer.jstimer) {
-		document.getElementById("button-start").classList.add("active");
+		return 'active';
 	    }
 	    else if(timer.current == 0) {
-		document.getElementById("button-reset").classList.add("active");
+		return 'reset';
 	    }
 	    else {
-		document.getElementById("button-pause").classList.add("active");
+		return 'paused';
 	    }
-	    pomo.update_strike();
-	    log.update();
 	},
-	tick: function() {
-	    var left = timer.total - timer.current;
-	    if(left == 0) {
+	update: function() {
+	    var timer_digital = document.getElementById("timer-counter-digital");
+
+
+	    timer_digital.innerHTML = timer._countdown();
+
+	    var perc = (timer.current / timer.total) * 100;
+	    document.getElementById("timer-counter-progress").style = "width: " + perc + "%";
+
+	    timer._update_title();
+	    var active = false;
+	    if(timer._state() == 'active') {
+		active = "button-start";
+	    }
+	    else if(timer._state() == 'reset') {
+		active = "button-reset";
+	    }
+	    else if(timer._state() == 'paused') {
+		active = "button-pause";
+	    }
+	    timer._update_buttons("timer-control", active);
+
+
+	    pomo.update_strike();
+	},
+	_left: function() {
+	    return timer.total - timer.current;
+	},
+	_tick: function() {
+	    if(timer._left() == 0) {
 		timer.pause();
 		timer.end();
 	    }
@@ -341,7 +320,7 @@
 	    }
 	    timer.update();
 	},
-	current_time: function() {
+	_current_time: function() {
 	    var date = new Date();
 	    return (date.getHours()<10 ? "0" : "") +
 		date.getHours() + ":" +
@@ -349,12 +328,11 @@
 		date.getMinutes();
 	},
 	start: function() {
-	    var left = timer.total - timer.current;
 	    if(timer.current == 0) {
-		timer.start_time = timer.current_time();
+		timer.start_time = timer._current_time();
 	    }
-	    if(left > 0) {
-		timer.jstimer = window.setInterval(timer.tick, 1000);
+	    if(timer._left() > 0) {
+		timer.jstimer = window.setInterval(timer._tick, 1000);
 	    }
 	    timer.update();
 	},
@@ -367,21 +345,9 @@
 	    if(!by_btn) {
 		alarm.start();
 	    }
-	    var string = "";
-	    if(pomo.current == "work") {
-		string = "Работа";
-	    }
-	    else if(pomo.current == "short") {
-		string = "Короткий перерыв";
-	    }
-	    else if(pomo.current == "long") {
-		string = "Длинный перерыв";
-	    }
-	    log.add(timer.start_time, timer.current_time(), string);
 	    pomo.next();
 	}
     }
-
   </script>
 
 </head>
@@ -414,78 +380,9 @@
       </div>
     </div>
   </div>
-  <div id="log">
-    <header>Журнал</header>
-    <div id="log-content">
-    </div>
-    <div id="log-control">
-      <button onclick="log.clear()">Очистить журнал</button>
-      <button onclick="log.clear_except_today()">Кроме сегодня</button>
-    </div>
-  </div>
-  <div id="manual">
-    <header>Инструкция</header>
-    <div id="keybindings">
-      <p><span class="key">q</span>Работа</p>
-      <p><span class="key">w</span>Короткий перерыв</p>
-      <p><span class="key">e</span>Длинный перерыв</p>
-      <p><span class="key">space</span>Старт / пауза</p>
-      <p><span class="key">a</span>Старт</p>
-      <p><span class="key">s</span>Пауза</p>
-      <p><span class="key">d</span>Сброс таймера</p>
-      <p><span class="key">f</span>Конец</p>
-      <p><span class="key">r</span>Сброс страйка</p>
-    </dl>
-  </div>
-  <div id="config">
-    <header>Настройки</header>
-    <button id="alarm-test" onclick="alarm.start()">Проверка сигнала</button>
-    <div class="parameter">
-      <div class="name">Работа</div>
-      <button>+</button>
-      <div class="value">15 мин</div>
-      <button>-</button>
-    </div>
-  </div>
   <script>
     config.read();
     pomo.set("work");
-
-    window.onkeydown = function(e){
-        if(e.keyCode == 81){ // q -> work
-	    pomo.set("work");
-        }
-        if(e.keyCode == 87){ // w -> short
-	    pomo.set("short");
-        }
-        if(e.keyCode == 69){ // e -> long
-	    pomo.set("long");
-        }
-        if(e.keyCode == 65){ // a -> start
-	    timer.start();
-        }
-        if(e.keyCode == 83){ // s -> pause
-	    timer.pause();
-        }
-        if(e.keyCode == 68){ // d -> reset timer
-	    timer.reset();
-        }
-        if(e.keyCode == 70){ // f -> end
-	    timer.end();
-        }
-        if(e.keyCode == 32){ // space -> start/pause
-	    e.preventDefault();
-	    if(timer.jstimer) {
-		timer.pause();
-	    }
-	    else {
-		timer.start();
-	    }
-        }
-        if(e.keyCode == 82){ // r -> reset strike
-	    pomo.reset_strike();
-        }
-    }
   </script>
 </body>
 </html>
