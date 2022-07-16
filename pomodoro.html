@@ -120,6 +120,21 @@
 
   <script>
 
+    function update_buttons(block, active = false, cls = "active") {
+	// turn off all buttons in block except active
+	btns = document.getElementById(block).children;
+	for(var i = 0; i < btns.length; i++) {
+	    if(active) {
+		if(btns[i].id == active) {
+		    btns[i].classList.add(cls);
+		}
+		else {
+		    btns[i].classList.remove(cls);
+		}
+	    }
+	}
+    }
+
     var alarm = {
 	audio: new Audio('alarm.mp3'),
 
@@ -133,211 +148,128 @@
 	}
     }
 
-    var timer = {
-	time_total: 0,
-	time_current: 0,
-	strike_current: 0,
-	strike_max: 3,
+    var timing = {
+	// wrapper for timing object in JS
 	jstimer: false,
-	start_time: "",
-	_current: "",
-	_intervals: {
-	    "work": 900,
-	    "short": 300,
-	    "long": 1200
-	},
-	_countdown: {
-	    _total: 0,
-	    _current: 0,
-	    _jstimer: false,
-	    set: function(time) {
-	    	timer._countdown._total = time;
-		timer._countdown.reset();
-	    },
-	    reset: function() {
-		timer._countdown.pause();
-		timer._countdown._current = 0;
-	    },
-	    start: function() {
-		if(timer._left() > 0) {
-		    timer.jstimer = window.setInterval(timer._tick, 1000);
-		}
-	    },
-	    pause: function() {
-	    	window.clearInterval(timer._countdown._jstimer);
-		timer._countdown._jstimer = false;
-	    },
-	    state: function() {
-		if(timer._countdown._jstimer) {
-		    return 'active';
-		}
-		else if(timer._countdown._current == 0) {
-		    return 'reset';
-		}
-		else if(timer._countdown._left() == 0){
-		    return 'finished';
-		}
-		else {
-		    return 'paused';
-		}
-	    },
-	    _left: function() {
-		return timer._countdown._total - timer._countdown._current;
-	    },
-	    digital: function() {
-	    	var left = timer._countdown._left();
-		var minutes = Math.floor(left / 60);
-		var seconds = left - minutes * 60;
-
-		var string = (minutes > 9 ? "" : "0") +
-		    minutes + ":" +
-		    (seconds > 9 ? "" : "0") + seconds;
-		return string;
-	    },
-	    perc: function() {
-	    	return (timer._countdown._current / timer._countdown._total) * 100;
-	    },
-	    _tick: function() {
-		if(timer._countdown._left() == 0) {
-		    timer._countdown.pause();
-		}
-		else {
-		    timer._countdown._current += 1;
-		}
-	    },
-	},
-	strike: {},
-	load: function() {
-	},
-	save: function() {
-	},
-	windup: function(name) {
-	    timer._current = name;
-	    timer.set(timer._intervals[name]);
-	    if(name == "work") {
-		timer._update_buttons("timer-intervals", "button-work");
-	    }
-	    else if(name == "short") {
-		timer._update_buttons("timer-intervals", "button-short");
-	    }
-	    if(name == "long") {
-		timer._update_buttons("timer-intervals", "button-long");
-	    }
-	},
-	next: function() {
-	    if(timer._current == "work") {
-		if(timer.strike_current >= timer.strike_max) {
-		    timer.windup("long");
-		}
-		else {
-		    timer.windup("short");
-		}
-	    }
-	    else if(timer._current == "short" || timer._current == "long") {
-		timer.windup("work");
-	    }
-	},
-	reset: function() {
-	    timer._countdown.reset();
-	    timer.update();
-	},
-	set: function(time) {
-	    timer._countdown.set(time);
-	    timer.update();
-	},
-	_update_title: function() {
-	    var title = "";
-	    title += timer._countdown() + " | ";
-	    if(timer._current == "work") {
-		title += "Работа";
-	    }
-	    else if(timer._current == "short") {
-		title += "Короткий";
-	    }
-	    else if(timer._current == "long") {
-		title += "Длинный";
-	    }
-	    title += " | Pomodoro Timer";
-	    document.title = title;
-	},
-	_update_buttons: function(block, active = false, cls = "active") {
-	    // turn off all buttons in block except active
-	    btns = document.getElementById(block).children;
-	    for(var i = 0; i < btns.length; i++) {
-		if(active) {
-		    if(btns[i].id == active) {
-			btns[i].classList.add(cls);
-		    }
-		    else {
-			btns[i].classList.remove(cls);
-		    }
-		}
-	    }
-	},
-	_update_progress: function() {
-	    document.getElementById("timer-counter-progress").style = "width: " + perc + "%";
-	},
-	update: function() {
-	    document.getElementById("timer-counter-digital").innerHTML = timer._countdown.digital();
-	    // timer._update_progress();
-	    // timer._update_title();
-
-	    // if(timer._state() == 'active') {
-	    // 	timer._update_buttons("timer-control", "button-start");
-	    // }
-	    // else if(timer._state() == 'reset') {
-	    // 	timer._update_buttons("timer-control", "button-reset");
-	    // }
-	    // else if(timer._state() == 'paused') {
-	    // 	timer._update_buttons("timer-control", "button-pause");
-	    // }
-	    // timer._update_strike();
-	},
-	// _update_strike: function() {
-	//     document.getElementById("strike").innerHTML = timer.strike_current;
-	//     document.getElementById("strike-max").innerHTML = timer.strike_max;
-	// },
-	_current_time: function() {
-	    var date = new Date();
-	    return (date.getHours()<10 ? "0" : "") +
-		date.getHours() + ":" +
-		(date.getMinutes()<10 ? "0" : "") +
-		date.getMinutes();
-	},
 	start: function() {
-	    if(timer._countdown._state() == 'reset') {
-		timer.start_time = timer._current_time();
-	    }
-	    timer._countdown.start();
-	    timer.update();
+	    timing.jstimer = window.setInterval(timing._tick, 1000);
 	},
-	pause: function() {
-	    timer._countdown.pause();
-	    timer.update();
+	stop: function() {
+	    window.clearInterval(timing._jstimer);
+	    timing._jstimer = false;
 	},
-	end: function(by_btn = false) {
-	    // if(!by_btn) {
-	    // 	alarm.start();
-	    // }
-	    // if(timer._current == "work") {
-	    // 	timer.strike_current += 1;
-	    // }
-	    // else if(timer._current == "long") {
-	    // 	timer.strike_current = 0;
-	    // }
-	    // timer.next();
+	counting: function() {
+	    return jstimer;
+	},
+	_tick: function() {
+	    timer.tick();
 	}
     }
-    // var strike = {
-    // 	current: 0,
-    // 	max: 0,
 
-    // 	init: function(max) {},
-    // 	add: function() {},
-    // 	reset: function() {},
-    // 	is_ready: function() {}
-    // }
+    var countdown = {
+	// separate countdown structure
+	_total: 0,
+	_current: 0,
+	pause: function() {
+	    timing.stop();
+	},
+	reset: function() {
+	    countdown.pause();
+	    countdown._current = 0;
+	},
+	set: function(time) {
+	    countdown._total = time;
+	    countdown.reset();
+	},
+	_left: function() {
+	    return countdown._total - countdown._current;
+	},
+	start: function() {
+	    if(countdown._left() > 0) {
+		timing.start();
+	    }
+	},
+	state: function() {
+	    if(timing.counting()) {
+		return 'active';
+	    }
+	    else if(countdown._current == 0) {
+		return 'reset';
+	    }
+	    else if(countdown._left() == 0){
+		return 'finished';
+	    }
+	    else {
+		return 'paused';
+	    }
+	},
+	tick: function() {
+	    if(countdown._left() == 0) {
+		countdown.pause();
+	    }
+	    else {
+		countdown._current += 1;
+	    }
+	},
+	digital: function() {
+	    var left = countdown._left();
+	    var minutes = Math.floor(left / 60);
+	    var seconds = left - minutes * 60;
 
+	    var string = (minutes > 9 ? "" : "0") +
+		minutes + ":" +
+		(seconds > 9 ? "" : "0") + seconds;
+	    return string;
+	},
+	perc: function() {
+	    return (countdown._current / countdown._total) * 100;
+	}
+    }
+
+    var strike = {}
+
+    var timer = {
+	_current: "",
+	_timers: {},
+	load: function() {
+	    timer._timers = {"work": 900, "short": 300, "long": 1200};
+	},
+	save: function() {},
+	windup: function(name) {
+	    timer._current = name;
+	    countdown.set(timer._timers[name]);
+	    if(name == "work") { update_buttons("timer-intervals", "button-work"); }
+	    else if(name == "short") { update_buttons("timer-intervals", "button-short"); }
+	    else if(name == "long") { update_buttons("timer-intervals", "button-long"); }
+	    update();
+	},
+	reset: function() {
+	    countdown.reset();
+	},
+	start: function() {
+	    countdown.start();
+	},
+	pause: function() {
+	    countdown.pause();
+	},
+	end: function() {
+	    if(timer._current == "work") { timer.windup("short"); }
+	    else { timer.windup("work"); }
+	}
+    }
+
+    function update() {
+	// update screen
+	document.getElementById("timer-counter-digital").innerHTML = countdown.digital();
+    }
+
+    var btns = {
+	// buttons functions
+    }
+
+    var kbd = {
+	// keyboard functions
+    }
   </script>
 
 </head>
