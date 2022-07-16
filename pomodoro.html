@@ -146,6 +146,67 @@
 	    "short": 300,
 	    "long": 1200
 	},
+	_countdown: {
+	    _total: 0,
+	    _current: 0,
+	    _jstimer: false,
+	    set: function(time) {
+	    	timer._countdown._total = time;
+		timer._countdown.reset();
+	    },
+	    reset: function() {
+		timer._countdown.pause();
+		timer._countdown._current = 0;
+	    },
+	    start: function() {
+		if(timer._left() > 0) {
+		    timer.jstimer = window.setInterval(timer._tick, 1000);
+		}
+	    },
+	    pause: function() {
+	    	window.clearInterval(timer._countdown._jstimer);
+		timer._countdown._jstimer = false;
+	    },
+	    state: function() {
+		if(timer._countdown._jstimer) {
+		    return 'active';
+		}
+		else if(timer._countdown._current == 0) {
+		    return 'reset';
+		}
+		else if(timer._countdown._left() == 0){
+		    return 'finished';
+		}
+		else {
+		    return 'paused';
+		}
+	    },
+	    _left: function() {
+		return timer._countdown._total - timer._countdown._current;
+	    },
+	    digital: function() {
+	    	var left = timer._countdown._left();
+		var minutes = Math.floor(left / 60);
+		var seconds = left - minutes * 60;
+
+		var string = (minutes > 9 ? "" : "0") +
+		    minutes + ":" +
+		    (seconds > 9 ? "" : "0") + seconds;
+		return string;
+	    },
+	    perc: function() {
+	    	return (timer._countdown._current / timer._countdown._total) * 100;
+	    },
+	    _tick: function() {
+		if(timer._countdown._left() == 0) {
+		    timer._countdown.pause();
+		}
+		else {
+		    timer._countdown._current += 1;
+		}
+	    },
+	},
+	strike: {},
 	load: function() {
 	},
 	save: function() {
@@ -177,21 +238,12 @@
 	    }
 	},
 	reset: function() {
-	    timer._reset();
+	    timer._countdown.reset();
 	    timer.update();
-	},
-	_reset: function () {
-	    timer.pause();
-	    timer.time_current = 0;
 	},
 	set: function(time) {
-	    timer._set(time);
+	    timer._countdown.set(time);
 	    timer.update();
-	},
-	    
-	_set: function(time) {
-	    timer.time_total = time;
-	    timer._reset();
 	},
 	_update_title: function() {
 	    var title = "";
@@ -208,16 +260,6 @@
 	    title += " | Pomodoro Timer";
 	    document.title = title;
 	},
-	_countdown: function() {
-	    var left = timer.time_total - timer.time_current;
-	    var minutes = Math.floor(left / 60);
-	    var seconds = left - minutes * 60;
-
-	    var string = (minutes > 9 ? "" : "0") +
-		minutes + ":" +
-		(seconds > 9 ? "" : "0") + seconds;
-	    return string;
-	},
 	_update_buttons: function(block, active = false, cls = "active") {
 	    // turn off all buttons in block except active
 	    btns = document.getElementById(block).children;
@@ -232,54 +274,29 @@
 		}
 	    }
 	},
-	_state: function() {
-	    if(timer.jstimer) {
-		return 'active';
-	    }
-	    else if(timer.time_current == 0) {
-		return 'reset';
-	    }
-	    else {
-		return 'paused';
-	    }
-	},
 	_update_progress: function() {
-	    var perc = (timer.time_current / timer.time_total) * 100;
 	    document.getElementById("timer-counter-progress").style = "width: " + perc + "%";
 	},
 	update: function() {
-	    document.getElementById("timer-counter-digital").innerHTML = timer._countdown();
-	    timer._update_progress();
-	    timer._update_title();
+	    document.getElementById("timer-counter-digital").innerHTML = timer._countdown.digital();
+	    // timer._update_progress();
+	    // timer._update_title();
 
-	    if(timer._state() == 'active') {
-		timer._update_buttons("timer-control", "button-start");
-	    }
-	    else if(timer._state() == 'reset') {
-		timer._update_buttons("timer-control", "button-reset");
-	    }
-	    else if(timer._state() == 'paused') {
-		timer._update_buttons("timer-control", "button-pause");
-	    }
-	    timer._update_strike();
+	    // if(timer._state() == 'active') {
+	    // 	timer._update_buttons("timer-control", "button-start");
+	    // }
+	    // else if(timer._state() == 'reset') {
+	    // 	timer._update_buttons("timer-control", "button-reset");
+	    // }
+	    // else if(timer._state() == 'paused') {
+	    // 	timer._update_buttons("timer-control", "button-pause");
+	    // }
+	    // timer._update_strike();
 	},
-	_update_strike: function() {
-	    document.getElementById("strike").innerHTML = timer.strike_current;
-	    document.getElementById("strike-max").innerHTML = timer.strike_max;
-	},
-	_left: function() {
-	    return timer.time_total - timer.time_current;
-	},
-	_tick: function() {
-	    if(timer._left() == 0) {
-		timer.pause();
-		timer.end();
-	    }
-	    else {
-		timer.time_current += 1;
-	    }
-	    timer.update();
-	},
+	// _update_strike: function() {
+	//     document.getElementById("strike").innerHTML = timer.strike_current;
+	//     document.getElementById("strike-max").innerHTML = timer.strike_max;
+	// },
 	_current_time: function() {
 	    var date = new Date();
 	    return (date.getHours()<10 ? "0" : "") +
@@ -288,30 +305,27 @@
 		date.getMinutes();
 	},
 	start: function() {
-	    if(timer.time_current == 0) {
+	    if(timer._countdown._state() == 'reset') {
 		timer.start_time = timer._current_time();
 	    }
-	    if(timer._left() > 0) {
-		timer.jstimer = window.setInterval(timer._tick, 1000);
-	    }
+	    timer._countdown.start();
 	    timer.update();
 	},
 	pause: function() {
-	    window.clearInterval(timer.jstimer);
-	    timer.jstimer = false;
+	    timer._countdown.pause();
 	    timer.update();
 	},
 	end: function(by_btn = false) {
-	    if(!by_btn) {
-		alarm.start();
-	    }
-	    if(timer._current == "work") {
-		timer.strike_current += 1;
-	    }
-	    else if(timer._current == "long") {
-		timer.strike_current = 0;
-	    }
-	    timer.next();
+	    // if(!by_btn) {
+	    // 	alarm.start();
+	    // }
+	    // if(timer._current == "work") {
+	    // 	timer.strike_current += 1;
+	    // }
+	    // else if(timer._current == "long") {
+	    // 	timer.strike_current = 0;
+	    // }
+	    // timer.next();
 	}
     }
     // var strike = {
