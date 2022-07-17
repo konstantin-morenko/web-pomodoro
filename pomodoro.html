@@ -136,7 +136,7 @@
 
   <script>
 
-    function update_buttons(block, active = false, cls = "active") {
+    function hl_buttons(block, active = false, cls = "active") {
 	// turn off all buttons in block except active
 	btns = document.getElementById(block).children;
 	for(var i = 0; i < btns.length; i++) {
@@ -210,7 +210,7 @@
 		timing.start();
 	    }
 	},
-	state: function() {
+	status: function() {
 	    if(timing.counting()) {
 		return 'active';
 	    }
@@ -267,9 +267,9 @@
 	windup: function(name) {
 	    timer._current = name;
 	    countdown.set(timer._timers[name]);
-	    if(name == "work") { update_buttons("timer-intervals", "button-work"); }
-	    else if(name == "short") { update_buttons("timer-intervals", "button-short"); }
-	    else if(name == "long") { update_buttons("timer-intervals", "button-long"); }
+	    if(name == "work") { hl_buttons("timer-intervals", "button-work"); }
+	    else if(name == "short") { hl_buttons("timer-intervals", "button-short"); }
+	    else if(name == "long") { hl_buttons("timer-intervals", "button-long"); }
 	    update();
 	},
 	reset: function() {
@@ -289,7 +289,7 @@
 	},
 	tick: function() {
 	    countdown.tick();
-	    if(countdown.state() == "finished") {
+	    if(countdown.status() == "finished") {
 		timer.end();
 	    }
 	    update();
