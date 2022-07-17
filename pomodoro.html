@@ -36,6 +36,21 @@
 	padding: 4px;
 	border-bottom: solid 2px #ddd;
     }
+    header sup {
+	font-size: 50%;
+    }
+    #feedback {
+	display: flex;
+	flex-direction: row;
+	justify-content: space-between;
+	align-items: center;
+	font-style: italic;
+	font-size: 80%;
+    }
+    #feedback a {
+	color: #ddd;
+	text-decoration: underline;
+    }
     #timer-intervals, #timer-control, #timer-strike, #log-control {
 	display: flex;
 	flex-direction: row;
@@ -102,365 +117,238 @@
 	display: inline-block;
 	text-align: center;
     }
+    #config .parameter {
+	border-radius: 5px;
+	display: flex;
+	flex-direction: row;
+	align-items: center;
+	padding: 0 16px;
+    }
+    #config .parameter .name {
+	margin: 0 16px;
+    }
+    #config .parameter button {
+	width: 32px;
+	height: 32px;
+	border-radius: 8px;
+    }
   </style>
 
   <script>
-    var alarm = {
-	audio: new Audio('alarm.mp3'),
 
-	start: function () {
-	    alarm.audio.currentTime = 0;
-	    alarm.audio.loop = false;
-	    alarm.audio.play(); 
+    function update_buttons(block, active = false, cls = "active") {
+	// turn off all buttons in block except active
+	btns = document.getElementById(block).children;
+	for(var i = 0; i < btns.length; i++) {
+	    if(active) {
+		if(btns[i].id == active) {
+		    btns[i].classList.add(cls);
+		}
+		else {
+		    btns[i].classList.remove(cls);
+		}
+	    }
+	}
+    }
+
+    var player = {
+	sounds: {
+	    "end": new Audio("alarm.mp3")
+	},
+
+	play: function(snd) {
+	    player.sounds[snd].currentTime = 0;
+	    player.sounds[snd].loop = false;
+	    player.sounds[snd].play(); 
+	},
+
+	stop: function() {
+	    for(i = 0; i < sounds.length; i++) {
+		sounds[i].pause();
+	    }
+	}
+    }
+
+    var timing = {
+	// wrapper for timing object in JS
+	_jstimer: false,
+	start: function() {
+	    timing._jstimer = window.setInterval(timing._tick, 1000);
 	},
 	stop: function() {
-	    if(!alarm.audio.paused) {
-		alarm.audio.pause();
-	    }
+	    window.clearInterval(timing._jstimer);
+	    timing._jstimer = false;
+	},
+	counting: function() {
+	    return timing._jstimer;
+	},
+	_tick: function() {
+	    timer.tick();
 	}
     }
 
-    var log = {
-	data: [],
-	read: function() {
-	    log.data = JSON.parse(localStorage.getItem("log")) || [];
+    var countdown = {
+	// separate countdown structure
+	_total: 0,
+	_current: 0,
+	pause: function() {
+	    timing.stop();
 	},
-	write: function() {
-	    localStorage.setItem("log", JSON.stringify(log.data));
+	reset: function() {
+	    countdown.pause();
+	    countdown._current = 0;
 	},
-	clear: function(left = false) {
-	    if(left) {
-		if(!confirm("Очистить журнал до " + left + "?")) { return; }
-		log.data = log.data.filter(function(v) {return v.date >= left});
-	    }
-	    else {
-		if(!confirm("Очистить ВЕСЬ журнал?")) { return; }
-		log.data = [];
-	    }
-	    log.write();
-	    log.update();
-	},
-	clear_except_today: function() {
-	    var dt = new Date();
-	    var date = (dt.getYear() + 1900) + "-" + (dt.getMonth()+1 < 10 ? "0" : "") +
-		(dt.getMonth()+1) + "-" + (dt.getDate() < 10 ? "0" : "") + dt.getDate();
-	    log.clear(date);
-	},
-	add: function(start, end, type) {
-	    var dt = new Date();
-	    var date = (dt.getYear() + 1900) + "-" + (dt.getMonth()+1 < 10 ? "0" : "") +
-		(dt.getMonth()+1) + "-" + (dt.getDate() < 10 ? "0" : "") + dt.getDate();
-	    log.data.push({date: date, start: start, end: end, type: type});
-	    log.write();
-	},
-	update: function() {
-	    log.read();
-	    var pool = document.getElementById("log-content");
-	    pool.innerHTML = "";
-	    if(log.data.length == 0) {
-		var p = document.createElement("p");
-		p.innerHTML = "Нет данных";
-		pool.appendChild(p);
-	    }
-	    else {
-		var date = "";
-		for(var i = 0; i < log.data.length; i++) {
-		    if(date != log.data[i].date) {
-			var p = document.createElement("p");
-			p.classList.add("date");
-			p.innerHTML = log.data[i].date;
-			pool.appendChild(p);
-			date = log.data[i].date;
-		    }
-		    var p = document.createElement("p");
-		    p.classList.add("record");
-		    p.innerHTML = log.data[i].start + "–"
-			+ log.data[i].end + " : "
-			+ log.data[i].type;
-		    pool.appendChild(p);
-		}
-	    }
-	}
-    }
-
-    var intervals = {
-	"work": {
-	    len: 900,
-	    btn: "button-work",
-	    log: "Работа"
-	},
-	"short": {
-	    len: 300,
-	    btn: "button-short",
-	    log: "Короткий перерыв"
-	},
-	"long": {
-	    len: 1200,
-	    btn: "button-long",
-	    log: "Длинный перерыв"
-	}
-    }
-    var pomo = {
-	current: "",
-	strike: 0,
-	strike_max: 3,
-
-	set: function(name) {
-	    if(timer.current != 0 && timer.current != timer.total) {
-		if(!confirm("Сбросить таймер?")) { return; }
-	    }
-	    pomo.current = name;
-	    timer.set(intervals[name].len);
-	    btns = document.getElementById("timer-intervals").children;
-	    for(var i = 0; i < btns.length; i++) {
-		if(btns[i].id == intervals[name].btn) {
-		    btns[i].classList.add("active");
-		}
-		else {
-		    btns[i].classList.remove("active");
-		}
-	    }
-	    pomo.update_strike();
-	},
-	next: function() {
-	    if(pomo.current == "work") {
-		if(pomo.strike >= pomo.strike_max) {
-		    pomo.set("long");
-		}
-		else {
-		    pomo.set("short");
-		}
-	    }
-	    else if(pomo.current == "short" || pomo.current == "long") {
-		pomo.set("work");
-	    }
-	    pomo.update_strike();
-	},
-	update_strike: function() {
-	    document.getElementById("strike").innerHTML = pomo.strike;
-	    document.getElementById("strike-max").innerHTML = pomo.strike_max;
-	},
-	reset_strike: function() {
-	    if(!confirm("Сбросить счетчик страйков?")) { return; }
-	    pomo.strike = 0;
-	    pomo.update_strike();
-	}
-    }
-    var timer = {
-	total: 0,
-	current: 0,
-	count: false,
-	jstimer: false,
-	start_time: "",
-
-	reset: function () {
-	    timer.pause();
-	    timer.current = 0;
-	    timer.update();
-	},
-
 	set: function(time) {
-	    timer.total = time;
-	    timer.reset();
+	    countdown._total = time;
+	    countdown.reset();
 	},
-	update: function() {
-	    var timer_digital = document.getElementById("timer-counter-digital");
-
-	    var left = timer.total - timer.current;
+	_left: function() {
+	    return countdown._total - countdown._current;
+	},
+	start: function() {
+	    if(countdown._left() > 0) {
+		timing.start();
+	    }
+	},
+	state: function() {
+	    if(timing.counting()) {
+		return 'active';
+	    }
+	    else if(countdown._current == 0) {
+		return 'reset';
+	    }
+	    else if(countdown._left() == 0){
+		return 'finished';
+	    }
+	    else {
+		return 'paused';
+	    }
+	},
+	tick: function() {
+	    if(countdown._left() == 0) {
+		countdown.pause();
+	    }
+	    else {
+		countdown._current += 1;
+	    }
+	},
+	digital: function() {
+	    var left = countdown._left();
 	    var minutes = Math.floor(left / 60);
 	    var seconds = left - minutes * 60;
 
-	    var string = (minutes > 9 ? "" : "0") + minutes + ":" + (seconds > 9 ? "" : "0") + seconds;
-	    timer_digital.innerHTML = string;
-
-	    var perc = (timer.current / timer.total) * 100;
-	    document.getElementById("timer-counter-progress").style = "width: " + perc + "%";
-
-	    var title = "";
-	    title += string + " | ";
-	    if(pomo.current == "work") {
-		title += "Работа";
-	    }
-	    else if(pomo.current == "short") {
-		title += "Короткий";
-	    }
-	    else if(pomo.current == "long") {
-		title += "Длинный";
-	    }
-	    title += " | Pomodoro Timer";
-	    document.title = title;
-
-	    document.getElementById("button-start").classList.remove("active");
-	    document.getElementById("button-pause").classList.remove("active");
-	    document.getElementById("button-reset").classList.remove("active");
-	    if(timer.jstimer) {
-		document.getElementById("button-start").classList.add("active");
-	    }
-	    else if(timer.current == 0) {
-		document.getElementById("button-reset").classList.add("active");
-	    }
-	    else {
-		document.getElementById("button-pause").classList.add("active");
-	    }
-	    pomo.update_strike();
-	    log.update();
+	    var string = (minutes > 9 ? "" : "0") +
+		minutes + ":" +
+		(seconds > 9 ? "" : "0") + seconds;
+	    return string;
 	},
-	tick: function() {
-	    var left = timer.total - timer.current;
-	    if(left == 0) {
-		timer.pause();
-		timer.end();
-	    }
-	    else {
-		timer.current += 1;
-	    }
-	    timer.update();
-	},
-	current_time: function() {
-	    var date = new Date();
-	    return (date.getHours()<10 ? "0" : "") +
-		date.getHours() + ":" +
-		(date.getMinutes()<10 ? "0" : "") +
-		date.getMinutes();
-	},
-	start: function() {
-	    var left = timer.total - timer.current;
-	    if(timer.current == 0) {
-		timer.start_time = timer.current_time();
-	    }
-	    if(left > 0) {
-		timer.jstimer = window.setInterval(timer.tick, 1000);
-	    }
-	    timer.update();
-	},
-	pause: function() {
-	    window.clearInterval(timer.jstimer);
-	    timer.jstimer = false;
-	    timer.update();
-	},
-	end: function(by_btn = false) {
-	    if(!by_btn) {
-		alarm.start();
-	    }
-	    if(pomo.current == "work") {
-		pomo.strike += 1;
-	    }
-	    else if(pomo.current == "long") {
-		pomo.strike = 0;
-	    }
-
-	    var string = "";
-	    if(pomo.current == "work") {
-		string = "Работа";
-	    }
-	    else if(pomo.current == "short") {
-		string = "Короткий перерыв";
-	    }
-	    else if(pomo.current == "long") {
-		string = "Длинный перерыв";
-	    }
-	    log.add(timer.start_time, timer.current_time(), string);
-	    pomo.next();
+	perc: function() {
+	    return (countdown._current / countdown._total) * 100;
 	}
     }
 
+    var strike = {}
+
+    var timer = {
+	_current: "",
+	_timers: {},
+	load: function() {
+	    if(localStorage.getItem("_timers")) {
+		timer._timers = JSON.parse(localStorage.getItem("_timers"));
+	    }
+	    else {
+		timer._timers = {"work": 25*60, "short": 5*60, "long": 20*60};
+		timer.save();
+	    }
+	},
+	save: function() {
+	    localStorage.setItem("_timers", JSON.stringify(timer._timers));
+	},
+	windup: function(name) {
+	    timer._current = name;
+	    countdown.set(timer._timers[name]);
+	    if(name == "work") { update_buttons("timer-intervals", "button-work"); }
+	    else if(name == "short") { update_buttons("timer-intervals", "button-short"); }
+	    else if(name == "long") { update_buttons("timer-intervals", "button-long"); }
+	    update();
+	},
+	reset: function() {
+	    countdown.reset();
+	    update();
+	},
+	start: function() {
+	    countdown.start();
+	},
+	pause: function() {
+	    countdown.pause();
+	},
+	end: function() {
+	    player.play("end");
+	    if(timer._current == "work") { timer.windup("short"); }
+	    else { timer.windup("work"); }
+	},
+	tick: function() {
+	    countdown.tick();
+	    if(countdown.state() == "finished") {
+		timer.end();
+	    }
+	    update();
+	}
+    }
+
+    function update() {
+	// update screen
+	document.getElementById("timer-counter-digital").innerHTML = countdown.digital();
+    }
+
+    var buttons = {
+	// buttons functions
+	start: function() {
+	    timer.start();
+	},
+	pause: function() {
+	    timer.pause();
+	},
+	reset: function() {
+	    timer.reset();
+	},
+	end: function() {
+	    timer.end();
+	}
+    }
+
+    var kbd = {
+	// keyboard functions
+    }
   </script>
 
 </head>
 
 <body>
   <div id="timer">
-    <header>Pomodoro Timer</header>
+    <header>Pomodoro Timer <sup>v1.0.0</sup></header>
     <div id="timer-panel">
       <div id="timer-intervals">
-	<button id="button-work" onclick="pomo.set('work')">Работа</button>
-	<button id="button-short" onclick="pomo.set('short')">Короткий перерыв</button>
-	<button id="button-long" onclick="pomo.set('long')">Длинный перерыв</button>
+	<button id="button-work" onclick="timer.windup('work')">Работа</button>
+	<button id="button-short" onclick="timer.windup('short')">Короткий перерыв</button>
+	<button id="button-long" onclick="timer.windup('long')">Длинный перерыв</button>
       </div>
       <div id="timer-counter">
 	<div id="timer-counter-digital">
 	  00:00
 	</div>
-	<div id="timer-counter-scale">
-	  <div id="timer-counter-progress" style="width:50%"></div>
-	</div>
-      </div>
-      <div id="timer-strike">
-	<div id="strike-panel">Непрерывных: <span id="strike">X</span> из <span id="strike-max">Y</span></div><button onclick="pomo.reset_strike()">Сброс</button>
       </div>
       <div id="timer-control">
-	<button id="button-start" onclick="timer.start()">Старт</button>
-	<button id="button-pause" onclick="timer.pause()">Пауза</button>
-	<button id="button-reset" onclick="timer.reset()">Сброс</button>
-	<button onclick="timer.end(true)">Конец</button>
+	<button id="button-start" onclick="buttons.start()">Старт</button>
+	<button id="button-pause" onclick="buttons.pause()">Пауза</button>
+	<button id="button-reset" onclick="buttons.reset()">Сброс</button>
+	<button onclick="buttons.end()">Конец</button>
       </div>
     </div>
   </div>
-  <div id="log">
-    <header>Журнал</header>
-    <div id="log-content">
-    </div>
-    <div id="log-control">
-      <button onclick="log.clear()">Очистить журнал</button>
-      <button onclick="log.clear_except_today()">Кроме сегодня</button>
-    </div>
-  </div>
-  <div id="manual">
-    <header>Инструкция</header>
-    <div id="keybindings">
-      <p><span class="key">q</span>Работа</p>
-      <p><span class="key">w</span>Короткий перерыв</p>
-      <p><span class="key">e</span>Длинный перерыв</p>
-      <p><span class="key">space</span>Старт / пауза</p>
-      <p><span class="key">a</span>Старт</p>
-      <p><span class="key">s</span>Пауза</p>
-      <p><span class="key">d</span>Сброс таймера</p>
-      <p><span class="key">f</span>Конец</p>
-      <p><span class="key">r</span>Сброс страйка</p>
-    </dl>
-  </div>
-  <div id="config">
-    <header>Настройки</header>
-    <button id="alarm-test" onclick="alarm.start()">Проверка сигнала</button>
-  </div>
   <script>
-    pomo.set("work");
-
-    window.onkeydown = function(e){
-        if(e.keyCode == 81){ // q -> work
-	    pomo.set("work");
-        }
-        if(e.keyCode == 87){ // w -> short
-	    pomo.set("short");
-        }
-        if(e.keyCode == 69){ // e -> long
-	    pomo.set("long");
-        }
-        if(e.keyCode == 65){ // a -> start
-	    timer.start();
-        }
-        if(e.keyCode == 83){ // s -> pause
-	    timer.pause();
-        }
-        if(e.keyCode == 68){ // d -> reset timer
-	    timer.reset();
-        }
-        if(e.keyCode == 70){ // f -> end
-	    timer.end();
-        }
-        if(e.keyCode == 32){ // space -> start/pause
-	    e.preventDefault();
-	    if(timer.jstimer) {
-		timer.pause();
-	    }
-	    else {
-		timer.start();
-	    }
-        }
-        if(e.keyCode == 82){ // r -> reset strike
-	    pomo.reset_strike();
-        }
-    }
+    timer.load();
+    timer.windup("work");
   </script>
 </body>
 </html>
