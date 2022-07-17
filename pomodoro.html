@@ -285,6 +285,9 @@
 	    if(timer._current == "work") { timer.windup("short"); }
 	    else { timer.windup("work"); }
 	},
+	status: function() {
+	    return countdown.status();
+	},
 	tick: function() {
 	    countdown.tick();
 	    if(countdown.status() == "finished") {
@@ -331,23 +334,46 @@
 	    timer.end();
 	    update();
 	},
-    }
-
-    var kbd = {
-	// keyboard functions
+	start_pause: function() {
+	    switch(timer.status()) {
+	    case "reset":
+	    case "paused":
+		timer.start();
+		break;
+	    case "active":
+		timer.pause();
+		break;
+	    }
+	    update();
+	}
     }
 
     function keypress(e) {
 	e.preventDefault();
 	switch(e.code) {
-	case "Digit1": // 1
+	case "Digit1":
 	    user.work();
 	    break;
-	case "Digit2": // 2
+	case "Digit2":
 	    user["short"]();
 	    break;
-	case "Digit3": // 3
+	case "Digit3":
 	    user["long"]();
+	    break;
+	case "KeyA":
+	    user.start();
+	    break;
+	case "KeyS":
+	    user.pause();
+	    break;
+	case "KeyD":
+	    user.reset();
+	    break;
+	case "KeyF":
+	    user.end();
+	    break;
+	case "Space":
+	    user.start_pause();
 	    break;
 	}
     }
@@ -382,6 +408,11 @@
     <p><span class="key">1</span>Работа</p>
     <p><span class="key">2</span>Короткий перерыв</p>
     <p><span class="key">3</span>Длинный перерыв</p>
+    <p><span class="key">a</span>Старт</p>
+    <p><span class="key">s</span>Пауза</p>
+    <p><span class="key">d</span>Сброс</p>
+    <p><span class="key">f</span>Конец</p>
+    <p><span class="key">Пробел</span>Старт/пауза</p>
   </div>
   <script>
     timer.load();
