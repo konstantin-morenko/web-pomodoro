@@ -106,8 +106,6 @@
     #log-content .record {
 	margin: 4px 4px 0 30px;
     }
-    #keybindings {
-    }
     #keybindings .key {
 	border: 1px solid #ddd;
 	border-radius: 4px;
@@ -308,6 +306,15 @@
 
     var user = {
 	// buttons functions
+	work: function() {
+	    timer.windup('work')
+	},
+	"short": function() {
+	    timer.windup('short');
+	},
+	"long": function() {
+	    timer.windup('long');
+	},
 	start: function() {
 	    timer.start();
 	    update();
@@ -323,11 +330,26 @@
 	end: function() {
 	    timer.end();
 	    update();
-	}
+	},
     }
 
     var kbd = {
 	// keyboard functions
+    }
+
+    function keypress(e) {
+	e.preventDefault();
+	switch(e.code) {
+	case "Digit1": // 1
+	    user.work();
+	    break;
+	case "Digit2": // 2
+	    user["short"]();
+	    break;
+	case "Digit3": // 3
+	    user["long"]();
+	    break;
+	}
     }
   </script>
 
@@ -338,9 +360,9 @@
     <header>Pomodoro Timer <sup>v1.0.0+</sup></header>
     <div id="timer-panel">
       <div id="timer-intervals">
-	<button id="button-work" onclick="timer.windup('work')">Работа</button>
-	<button id="button-short" onclick="timer.windup('short')">Короткий перерыв</button>
-	<button id="button-long" onclick="timer.windup('long')">Длинный перерыв</button>
+	<button id="button-work" onclick="user.work()">Работа</button>
+	<button id="button-short" onclick="user.short()">Короткий перерыв</button>
+	<button id="button-long" onclick="user.long()">Длинный перерыв</button>
       </div>
       <div id="timer-counter">
 	<div id="timer-counter-digital">
@@ -355,9 +377,16 @@
       </div>
     </div>
   </div>
+  <div id="keybindings">
+    <header>Горячие клавиши</header>
+    <p><span class="key">1</span>Работа</p>
+    <p><span class="key">2</span>Короткий перерыв</p>
+    <p><span class="key">3</span>Длинный перерыв</p>
+  </div>
   <script>
     timer.load();
     timer.windup("work");
+    document.addEventListener('keypress', keypress);
   </script>
 </body>
 </html>
