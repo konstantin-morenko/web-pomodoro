@@ -310,12 +310,15 @@
     var user = {
 	// buttons functions
 	work: function() {
+	    if(!confirm_reset()) { return; }
 	    timer.windup('work')
 	},
 	"short": function() {
+	    if(!confirm_reset()) { return; }
 	    timer.windup('short');
 	},
 	"long": function() {
+	    if(!confirm_reset()) { return; }
 	    timer.windup('long');
 	},
 	start: function() {
@@ -327,10 +330,12 @@
 	    update();
 	},
 	reset: function() {
+	    if(!confirm_reset()) { return; }
 	    timer.reset();
 	    update();
 	},
 	end: function() {
+	    if(!confirm_reset()) { return; }
 	    timer.end();
 	    update();
 	},
@@ -345,6 +350,15 @@
 		break;
 	    }
 	    update();
+	}
+    }
+
+    function confirm_reset() {
+	if(timer.status() != "reset") {
+	    return confirm("Сбросить таймер?");
+	}
+	else {
+	    return true;
 	}
     }
 
@@ -383,7 +397,7 @@
 
 <body>
   <div id="timer">
-    <header>Pomodoro Timer <sup>v1.0.0+</sup></header>
+    <header>Pomodoro Timer <sup>v1.0.1</sup></header>
     <div id="timer-panel">
       <div id="timer-intervals">
 	<button id="button-work" onclick="user.work()">Работа</button>
