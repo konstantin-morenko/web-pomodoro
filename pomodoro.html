@@ -36,6 +36,21 @@
 	padding: 4px;
 	border-bottom: solid 2px #ddd;
     }
+    header sup {
+	font-size: 50%;
+    }
+    #feedback {
+	display: flex;
+	flex-direction: row;
+	justify-content: space-between;
+	align-items: center;
+	font-style: italic;
+	font-size: 80%;
+    }
+    #feedback a {
+	color: #ddd;
+	text-decoration: underline;
+    }
     #timer-intervals, #timer-control, #timer-strike, #log-control {
 	display: flex;
 	flex-direction: row;
@@ -135,31 +150,36 @@
 	}
     }
 
-    var alarm = {
-	audio: new Audio('alarm.mp3'),
-
-	start: function () {
-	    alarm.audio.currentTime = 0;
-	    alarm.audio.loop = false;
-	    alarm.audio.play(); 
+    var player = {
+	sounds: {
+	    "end": new Audio("alarm.mp3")
 	},
+
+	play: function(snd) {
+	    player.sounds[snd].currentTime = 0;
+	    player.sounds[snd].loop = false;
+	    player.sounds[snd].play(); 
+	},
+
 	stop: function() {
-	    alarm.audio.pause();
+	    for(i = 0; i < sounds.length; i++) {
+		sounds[i].pause();
+	    }
 	}
     }
 
     var timing = {
 	// wrapper for timing object in JS
-	jstimer: false,
+	_jstimer: false,
 	start: function() {
-	    timing.jstimer = window.setInterval(timing._tick, 1000);
+	    timing._jstimer = window.setInterval(timing._tick, 1000);
 	},
 	stop: function() {
 	    window.clearInterval(timing._jstimer);
 	    timing._jstimer = false;
 	},
 	counting: function() {
-	    return jstimer;
+	    return timing._jstimer;
 	},
 	_tick: function() {
 	    timer.tick();
@@ -232,9 +252,17 @@
 	_current: "",
 	_timers: {},
 	load: function() {
-	    timer._timers = {"work": 900, "short": 300, "long": 1200};
+	    if(localStorage.getItem("_timers")) {
+		timer._timers = JSON.parse(localStorage.getItem("_timers"));
+	    }
+	    else {
+		timer._timers = {"work": 25*60, "short": 5*60, "long": 20*60};
+		timer.save();
+	    }
 	},
-	save: function() {},
+	save: function() {
+	    localStorage.setItem("_timers", JSON.stringify(timer._timers));
+	},
 	windup: function(name) {
 	    timer._current = name;
 	    countdown.set(timer._timers[name]);
@@ -245,6 +273,7 @@
 	},
 	reset: function() {
 	    countdown.reset();
+	    update();
 	},
 	start: function() {
 	    countdown.start();
@@ -253,8 +282,16 @@
 	    countdown.pause();
 	},
 	end: function() {
+	    player.play("end");
 	    if(timer._current == "work") { timer.windup("short"); }
 	    else { timer.windup("work"); }
+	},
+	tick: function() {
+	    countdown.tick();
+	    if(countdown.state() == "finished") {
+		timer.end();
+	    }
+	    update();
 	}
     }
 
@@ -263,8 +300,20 @@
 	document.getElementById("timer-counter-digital").innerHTML = countdown.digital();
     }
 
-    var btns = {
+    var buttons = {
 	// buttons functions
+	start: function() {
+	    timer.start();
+	},
+	pause: function() {
+	    timer.pause();
+	},
+	reset: function() {
+	    timer.reset();
+	},
+	end: function() {
+	    timer.end();
+	}
     }
 
     var kbd = {
@@ -276,7 +325,7 @@
 
 <body>
   <div id="timer">
-    <header>Pomodoro Timer</header>
+    <header>Pomodoro Timer <sup>v1.0.0</sup></header>
     <div id="timer-panel">
       <div id="timer-intervals">
 	<button id="button-work" onclick="timer.windup('work')">Работа</button>
@@ -291,14 +340,11 @@
 	  <div id="timer-counter-progress" style="width:50%"></div>
 	</div>
       </div>
-      <div id="timer-strike">
-	<div id="strike-panel">Непрерывных: <span id="strike">X</span> из <span id="strike-max">Y</span></div><button onclick="">Сброс</button>
-      </div>
       <div id="timer-control">
-	<button id="button-start" onclick="timer.start()">Старт</button>
-	<button id="button-pause" onclick="timer.pause()">Пауза</button>
-	<button id="button-reset" onclick="timer.reset()">Сброс</button>
-	<button onclick="timer.end(true)">Конец</button>
+	<button id="button-start" onclick="buttons.start()">Старт</button>
+	<button id="button-pause" onclick="buttons.pause()">Пауза</button>
+	<button id="button-reset" onclick="buttons.reset()">Сброс</button>
+	<button onclick="buttons.end()">Конец</button>
       </div>
     </div>
   </div>
