@@ -301,7 +301,7 @@
 	document.getElementById("timer-counter-digital").innerHTML = countdown.digital();
     }
 
-    var buttons = {
+    var user = {
 	// buttons functions
 	start: function() {
 	    timer.start();
@@ -339,10 +339,10 @@
 	</div>
       </div>
       <div id="timer-control">
-	<button id="button-start" onclick="buttons.start()">Старт</button>
-	<button id="button-pause" onclick="buttons.pause()">Пауза</button>
-	<button id="button-reset" onclick="buttons.reset()">Сброс</button>
-	<button onclick="buttons.end()">Конец</button>
+	<button id="button-start" onclick="user.start()">Старт</button>
+	<button id="button-pause" onclick="user.pause()">Пауза</button>
+	<button id="button-reset" onclick="user.reset()">Сброс</button>
+	<button onclick="user.end()">Конец</button>
       </div>
     </div>
   </div>
