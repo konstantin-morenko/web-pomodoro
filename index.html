@@ -270,7 +270,9 @@
 		timer._timers = JSON.parse(localStorage.getItem("_timers"));
 	    }
 	    else {
-		timer._timers = {"work": 25*60, "short": 5*60, "long": 20*60};
+		timer._timers = {"work": {"min": 10*60, "cur": 25*60, "max": 30*60, "step": 60},
+				 "short": {"min": 3*60, "cur": 5*60, "max": 6*60, "step": 30},
+				 "long": {"min": 15*60, "cur": 20*60, "max": 30*60, "step": 60}};
 		timer.save();
 	    }
 	},
@@ -279,7 +281,7 @@
 	},
 	windup: function(name) {
 	    timer._current = name;
-	    countdown.set(timer._timers[name]);
+	    countdown.set(timer._timers[name].cur);
 	    if(name == "work") { hl_buttons("timer-intervals", "button-work"); }
 	    else if(name == "short") { hl_buttons("timer-intervals", "button-short"); }
 	    else if(name == "long") { hl_buttons("timer-intervals", "button-long"); }
@@ -310,50 +312,19 @@
 	    }
 	    update();
 	},
-	adj_timer: function(name, adj) {
+	adj_timer: function(dir, name = false) {
 	    if(timer.status() != "reset") { return; }
-	    var max = 0;
-	    var min = 0;
-	    switch(name) {
-	    case "work":
-		max = 30*60;
-		min = 10*60;
-		break;
-	    case "short":
-		max = 7*60;
-		min = 3*60;
-		break;
-	    case "long":
-		max = 30*60;
-		min = 15*60;
-		break;
+	    if(!name) { name = timer._current; }
+	    var adj = timer._timers[name].step;
+	    if(dir == "-") { adj *= -1; }
+	    timer._timers[name].cur += adj;
+	    if(timer._timers[name].cur > timer._timers[name].max) {
+		timer._timers[name].cur = timer._timers[name].max;
 	    }
-	    timer._timers[name] += adj;
-	    if(timer._timers[name] > max) {
-		timer._timers[name] = max;
-	    }
-	    if(timer._timers[name] < min) {
-		timer._timers[name] = min;
+	    if(timer._timers[name].cur < timer._timers[name].min) {
+		timer._timers[name].cur = timer._timers[name].min;
 	    }
 	    timer.windup(timer._current);
-	},
-	adj_current: function(dir) {
-	    var step = 0;
-	    switch(timer._current) {
-	    case "work":
-		step = 60;
-		break;
-	    case "short":
-		step = 30;
-		break;
-	    case "long":
-		step = 60;
-		break;
-	    }
-	    if(dir == "-") {
-		step *= -1; // reverse step
-	    }
-	    timer.adj_timer(timer._current, step);
 	    timer.save();
 	}
     }
@@ -413,10 +384,10 @@
 	    update();
 	},
 	cur_inc: function() {
-	    timer.adj_current("+");
+	    timer.adj_timer("+");
 	},
 	cur_dec: function() {
-	    timer.adj_current("-");
+	    timer.adj_timer("-");
 	}
     }
 
