@@ -120,6 +120,9 @@
     #keybindings li {
 	width: 250px;
 	margin: 8px 0;
+	display: flex;
+	flex-direction: row;
+	align-items: center;
     }
     #keybindings .key {
 	border: 1px solid #ddd;
@@ -129,6 +132,13 @@
 	min-width: 18px;
 	display: inline-block;
 	text-align: center;
+    }
+    #keybindings .func .mode {
+	border-bottom: 1px solid #ddd;
+	font-size: 75%;
+	text-align: center;
+	display: block;
+	margin: 8px 0 4px 0;
     }
     #config .parameter {
 	border-radius: 5px;
@@ -441,7 +451,7 @@
 
 <body>
   <div id="timer">
-    <header>Pomodoro Timer <sup>v1.0.2</sup></header>
+    <header>Pomodoro Timer <sup>v1.0.3</sup></header>
     <div id="timer-panel">
       <div id="timer-intervals">
 	<button id="button-work" onclick="user.work()">Работа</button>
@@ -463,17 +473,62 @@
   </div>
   <div id="keybindings">
     <header>Горячие клавиши</header>
+    <p>Все клавиши работают во всех раскладках и со всеми
+      клавишами-модификаторами (Shift, Ctrl, Alt).</p>
+    <p>Клавиша <span class="key">Пробел</span> выполняет запуск
+    остановку таймера в зависимости от его текущего состояния.
     <ul class="keys-list">
-      <li><span class="key">1</span>Работа</li>
-      <li><span class="key">2</span>Короткий перерыв</li>
-      <li><span class="key">3</span>Длинный перерыв</li>
-      <li><span class="key">a</span>Старт</li>
-      <li><span class="key">s</span>Пауза</li>
-      <li><span class="key">d</span>Сброс</li>
-      <li><span class="key">f</span>Конец</li>
-      <li><span class="key">Пробел</span>Старт/пауза</li>
-      <li><span class="key">+</span>[В режиме "Сброс"] Увеличить текущий таймер</li>
-      <li><span class="key">-</span>[В режиме "Сброс"] Уменьшить текущий таймер</li>
+      <li>
+	<div><span class="key">1</span></div>
+	<div class="func">Работа</div>
+      </li>
+      <li>
+	<div><span class="key">2</span></div>
+	<div class="func">Короткий перерыв</div>
+      </li>
+      <li>
+	<div><span class="key">3</span></div>
+	<div class="func">Длинный перерыв</div>
+      </li>
+      <li>
+	<div><span class="key">a</span></div>
+	<div class="func">Старт</div>
+      </li>
+      <li>
+	<div><span class="key">s</span></div>
+	<div class="func">Пауза</div>
+      </li>
+      <li>
+	<div><span class="key">d</span></div>
+	<div class="func">Сброс</div>
+      </li>
+      <li>
+	<div><span class="key">f</span></div>
+	<div class="func">Конец</div>
+      </li>
+      <li>
+	<div class="key">Пробел</div>
+	<div class="func">
+	  <span class="mode">В режиме "Старт"</span>
+	  Пауза
+	  <span class="mode">В режиме "Пауза"</span>
+	  Старт
+	</div>
+      </li>
+      <li>
+	<div><span class="key">+</span></div>
+	<div class="func">
+	  <span class="mode">В режиме "Сброс"</span>
+	  Увеличить текущий таймер и сохранить значение
+	</div>
+      </li>
+      <li>
+	<div><span class="key">-</span></div>
+	<div class="func">
+	  <span class="mode">В режиме "Сброс"</span>
+	  Уменьшить текущий таймер и сохранить значение
+	</div>
+      </li>
       <li></li>
       <li></li>
     </ul>
