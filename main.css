@@ -1,0 +1,138 @@
+html {
+    background: #171717;
+    color: #ddd;
+}
+body {
+    font-family: Liberation Sans, sans-serif;
+    max-width: 800px;
+    margin: 16px auto;
+    padding: 0 16px;
+}
+a {
+    color: #ddd;
+}
+header {
+    font-size: 160%;
+    text-align: center;
+    padding: 4px;
+    border-bottom: solid 2px #ddd;
+}
+header sup {
+    font-size: 65%;
+}
+#feedback {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+    font-style: italic;
+    font-size: 80%;
+}
+#feedback a {
+    color: #ddd;
+    text-decoration: underline;
+}
+#timer-intervals, #timer-control, #timer-strike, #log-control {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    justify-content: center;
+    align-items: center;
+    max-width: 700px;
+    margin: 16px auto;
+}
+button {
+    border: 2px solid #ddd;
+    border-radius: 16px;
+    color: #ddd;
+    background: inherit;
+    height: 48px;
+    width: 120px;
+    margin: 16px;
+    display: block;
+}
+button.active {
+    background: #555;
+}
+button:hover {
+    background: #555;
+}
+button:active {
+    background: #999;
+}
+#timer-counter-digital {
+    font-size: 500%;
+    max-width: 350px;
+    margin: 16px auto;
+    text-align: center;
+}
+#timer-counter-scale {
+    width: 80%;
+    margin: 16px auto;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+}
+#timer-counter-progress:empty {
+    background: #ddd;
+    height: 10px;
+    border-radius: 5px;
+}
+#strike-panel {
+    margin: 0 16px;
+}
+#log-content .date {
+    font-style: italic;
+    text-decoration: underline;
+    margin: 8px 0;
+}
+#log-content .record {
+    margin: 4px 4px 0 30px;
+}
+#keybindings .keys-list {
+    list-style-type: none;
+    margin: 8px 0;
+    padding: 0;
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    justify-content: space-around;
+    align-items: center;
+}
+#keybindings li {
+    width: 250px;
+    margin: 8px 0;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+}
+#keybindings .key {
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    padding: 6px;
+    margin: 0 16px;
+    min-width: 18px;
+    display: inline-block;
+    text-align: center;
+}
+#keybindings .func .mode {
+    border-bottom: 1px solid #ddd;
+    font-size: 75%;
+    text-align: center;
+    display: block;
+    margin: 8px 0 4px 0;
+}
+#config .parameter {
+    border-radius: 5px;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    padding: 0 16px;
+}
+#config .parameter .name {
+    margin: 0 16px;
+}
+#config .parameter button {
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+}
