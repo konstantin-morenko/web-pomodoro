@@ -25,10 +25,10 @@ var player = {
 	player.sounds[snd].play(); 
     },
 
-    stop: function() {
-	for(i = 0; i < sounds.length; i++) {
-	    sounds[i].pause();
-	}
+    turn_off: function() {
+	var paused = false;
+	Object.entries(player.sounds).forEach(function([k, v]) { if(!v.paused) { paused = true; v.pause(); } })
+	return paused;
     }
 }
 
@@ -222,6 +222,7 @@ var user = {
 	update();
     },
     start_pause: function() {
+	if(player.turn_off()) return;
 	switch(timer.status()) {
 	case "reset":
 	case "paused":
@@ -232,6 +233,9 @@ var user = {
 	    break;
 	}
 	update();
+    },
+    turn_off_signal: function() {
+	player.turn_off();
     },
     cur_inc: function() {
 	timer.adj_timer("+");
@@ -261,6 +265,9 @@ function keypress(e) {
 	break;
     case "Digit3":
 	user["long"]();
+	break;
+    case "KeyQ":
+	user.turn_off_signal();
 	break;
     case "KeyA":
 	user.start();
