@@ -180,8 +180,10 @@ var timer = {
 }
 
 function update() {
-    // update screen
+    // update countdown
     document.getElementById("timer-counter-digital").innerHTML = countdown.digital();
+    document.getElementById("timer-counter-progress").style = "width: " + countdown.perc() + "%";
+
     // update timer control panel
     var status = countdown.status();
     if(status == "reset") { hl_buttons("timer-control", "button-reset"); }
