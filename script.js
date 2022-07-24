@@ -189,6 +189,20 @@ function update() {
     if(status == "reset") { hl_buttons("timer-control", "button-reset"); }
     else if(status == "active") { hl_buttons("timer-control", "button-start"); }
     else if(status == "paused") { hl_buttons("timer-control", "button-pause"); }
+
+    // update title
+    var tm = countdown.digital();
+    switch(countdown.status()) {
+    case "reset":
+	tm = "[" + tm + "]";
+	break;
+    case "active":
+	break;
+    case "paused":
+	tm = "(" + tm + ")";
+	break;
+    }
+    document.title = tm + " | Pomodoro Timer by Konstantin Morenko";
 }
 
 var user = {
