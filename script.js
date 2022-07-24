@@ -112,6 +112,12 @@ var countdown = {
 
 var strike = {}
 
+var l10n = {
+    "intervals/work": "Работа",
+    "intervals/short": "Перерыв",
+    "intervals/long": "Отдых"
+}
+
 var timer = {
     _current: "",
     _timers: {},
@@ -192,17 +198,19 @@ function update() {
 
     // update title
     var tm = countdown.digital();
+    var symbol = "";
     switch(countdown.status()) {
     case "reset":
-	tm = "[" + tm + "]";
+	symbol = "⏹";
 	break;
     case "active":
+	symbol = "⏩";
 	break;
     case "paused":
-	tm = "(" + tm + ")";
+	symbol = "⏸";
 	break;
     }
-    document.title = tm + " | Pomodoro Timer by Konstantin Morenko";
+    document.title = symbol + " " + tm + " | " + l10n["intervals/" + timer._current] + " | Pomodoro Timer by Konstantin Morenko";
 }
 
 var user = {
