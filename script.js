@@ -242,6 +242,7 @@ var user = {
     },
     end: function() {
 	if(!confirm_reset()) { return; }
+	if(timer.status() == "reset") { return; }
 	timer.end();
 	update();
     },
