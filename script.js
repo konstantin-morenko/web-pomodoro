@@ -281,6 +281,7 @@ function confirm_reset() {
 
 function keypress(e) {
     e.preventDefault();
+    document.activeElement.blur();
     switch(e.code) {
     case "Digit1":
 	user.work();
