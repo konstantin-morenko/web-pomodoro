@@ -121,6 +121,10 @@ var l10n = {
 var timer = {
     _current: "",
     _timers: {},
+    init: function() {
+	timer.load();
+	timer.windup("work");
+    },
     load: function() {
 	if(localStorage.getItem("_timers")) {
 	    timer._timers = JSON.parse(localStorage.getItem("_timers"));
