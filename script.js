@@ -271,7 +271,16 @@ var user = {
     },
     cur_dec: function() {
 	timer.adj_timer("-");
+    },
+    wipe_all: function() {
+	if(!confirm("Сбросить все настройки?")) return;
+	localStorage.clear();
+	init();
     }
+}
+
+function init() {
+    timer.init();
 }
 
 function confirm_reset() {
