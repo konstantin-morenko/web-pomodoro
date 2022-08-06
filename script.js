@@ -276,6 +276,9 @@ var user = {
 	if(!confirm("Сбросить все настройки?")) return;
 	localStorage.clear();
 	init();
+    },
+    check_alarm: function() {
+	player.play("end");
     }
 }
 

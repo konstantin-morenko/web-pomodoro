@@ -32,7 +32,7 @@ header sup {
     color: #ddd;
     text-decoration: underline;
 }
-#timer-intervals, #timer-control, #timer-strike, #log-control {
+.button-panel {
     display: flex;
     flex-direction: row;
     flex-wrap: wrap;

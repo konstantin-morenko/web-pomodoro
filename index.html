@@ -28,7 +28,7 @@
   <div id="timer">
     <header>Pomodoro Timer <sup>1.4</sup></header>
     <div id="timer-panel">
-      <div id="timer-intervals">
+      <div id="timer-intervals" class="button-panel">
 	<button id="button-work" onclick="user.work()">Работа</button>
 	<button id="button-short" onclick="user.short()">Перерыв</button>
 	<button id="button-long" onclick="user.long()">Отдых</button>
@@ -41,7 +41,7 @@
       <div id="timer-counter-scale">
 	<div id="timer-counter-progress" style="width: 50%"></div>
       </div>
-      <div id="timer-control">
+      <div id="timer-control" class="button-panel">
 	<button id="button-start" onclick="user.start()">Старт</button>
 	<button id="button-pause" onclick="user.pause()">Пауза</button>
 	<button id="button-reset" onclick="user.reset()">Сброс</button>
@@ -72,7 +72,10 @@
   </div>
   <div id="preferences">
     <header>Настройки</header>
-    <button id="button-wipe-all" onclick="user.wipe_all()">Сбросить все настройки</button>
+    <div class="button-panel">
+      <button id="button-wipe-all" onclick="user.wipe_all()">Сбросить все настройки</button>
+      <button id="button-check-alarm" onclick="user.check_alarm()">Проверить сигнал</button>
+    </div>
   </div>
   <div id="method">
     <header>Метод Pomodoro</header>
