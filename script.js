@@ -115,7 +115,18 @@ var strike = {}
 var l10n = {
     "intervals/work": "Работа",
     "intervals/short": "Перерыв",
-    "intervals/long": "Отдых"
+    "intervals/long": "Отдых",
+    "notify/work-short/title": "Время сделать короткий перерыв!",
+    "notify/work-short/body": "Отличная работа!",
+    "notify/short-work/title": "Назад к работе!",
+    "notify/short-work/body": "Осталось немного!",
+    "notify/work-long/title": "Время отдохнуть!",
+    "notify/work-long/body": "Отличный страйк!",
+    "notify/long-work/title": "Начинаем новый страйк!",
+    "notify/long-work/body": "Еще один прорыв на сегодня!",
+    "notify/strikes": "Страйки",
+    "notify/test/title": "Тестовое уведомление",
+    "notify/test/body": "Так будут выглядеть уведомления"
 }
 
 var timer = {
@@ -159,8 +170,14 @@ var timer = {
     },
     end: function() {
 	player.play("end");
-	if(timer._current == "work") { timer.windup("short"); }
-	else { timer.windup("work"); }
+	if(timer._current == "work") {
+	    notify.work_short();
+	    timer.windup("short");
+	}
+	else {
+	    notify.short_work();
+	    timer.windup("work");
+	}
     },
     status: function() {
 	return countdown.status();
@@ -187,6 +204,31 @@ var timer = {
 	timer.windup(timer._current);
 	timer.save();
     }
+}
+
+var notify = {
+    allowed: false,
+    notification: false,
+    notify: function(title, body) {
+	notify.notification = new Notification(title, {body: body});
+	setTimeout(notify.close, 10*1000);
+    },
+    work_short: function() {
+	notify.notify(l10n["notify/work-short/title"], l10n["notify/work-short/body"]);
+    },
+    short_work: function() {
+	notify.notify(l10n["notify/short-work/title"], l10n["notify/short-work/body"]);
+    },
+    close: function() {
+	notify.notification.close();
+    },
+    test: function() {
+	notify.notify(l10n["notify/test/title"], l10n["notify/test/body"]);
+    }
+}
+
+if(Notification.permmission !== "granted") {
+    Notification.requestPermission();
 }
 
 function update() {
@@ -279,7 +321,10 @@ var user = {
     },
     check_alarm: function() {
 	player.play("end");
-    }
+    },
+    check_notification: function() {
+	notify.test();
+    },
 }
 
 function init() {
