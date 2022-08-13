@@ -103,18 +103,34 @@ kbd {
     min-width: 20px;
     text-align: center;
 }
-#config .parameter {
+#preferences .adjust-panel {
+    width: 400px;
     border-radius: 5px;
     display: flex;
     flex-direction: row;
     align-items: center;
     padding: 0 16px;
+    justify-content: space-between;
 }
-#config .parameter .name {
+#preferences .adjust-panel .label {
     margin: 0 16px;
 }
-#config .parameter button {
+#preferences .adjust-panel .adjust {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    padding: 0 16px;
+    width: 180px;
+    flex-shrink: 0;
+}
+#preferences .adjust-panel .adjust .value {
+    width: 60px;
+    flex-shrink: 0;
+    text-align: center;
+}
+#preferences .adjust-panel .adjust button {
     width: 32px;
     height: 32px;
     border-radius: 8px;
+    flex-shrink: 0;
 }
