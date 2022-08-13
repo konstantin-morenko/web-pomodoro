@@ -15,11 +15,15 @@ function hl_buttons(block, active = false, cls = "active") {
 }
 
 var player = {
+    config: {
+	"volume": 10
+    },
     sounds: {
 	"end": new Audio("alarm.mp3")
     },
 
     play: function(snd) {
+	player.sounds[snd].volume = player.config["volume"] / 10;
 	player.sounds[snd].currentTime = 0;
 	player.sounds[snd].loop = false;
 	player.sounds[snd].play(); 
@@ -29,6 +33,36 @@ var player = {
 	var paused = false;
 	Object.entries(player.sounds).forEach(function([k, v]) { if(!v.paused) { paused = true; v.pause(); } })
 	return paused;
+    },
+    volume_inc: function() {
+	player.config["volume"] += 1;
+	if(player.config["volume"] > 10) player.config["volume"] = 10;
+	player.save();
+	update_parameters();
+    },
+    volume_dec: function() {
+	player.config["volume"] -= 1;
+	if(player.config["volume"] < 1) player.config["volume"] = 1;
+	player.save();
+	update_parameters();
+    },
+    load: function() {
+	if(localStorage.getItem("_player")) {
+	    player.config = JSON.parse(localStorage.getItem("_player"));
+	}
+	else {
+	    player.config = {
+		"volume": 10
+	    };
+	    player.save();
+	}
+    },
+    save: function() {
+	localStorage.setItem("_player", JSON.stringify(player.config));
+    },
+    init: function() {
+	player.load();
+	update_parameters();
     }
 }
 
@@ -231,6 +265,10 @@ if(Notification.permmission !== "granted") {
     Notification.requestPermission();
 }
 
+function update_parameters() {
+    document.getElementById("volume_value").innerHTML = player.config["volume"];
+}
+
 function update() {
     // update countdown
     document.getElementById("timer-counter-digital").innerHTML = countdown.digital();
@@ -325,10 +363,17 @@ var user = {
     check_notification: function() {
 	notify.test();
     },
+    volume_inc: function() {
+	player.volume_inc();
+    },
+    volume_dec: function() {
+	player.volume_dec();
+    },
 }
 
 function init() {
     timer.init();
+    player.init();
 }
 
 function confirm_reset() {

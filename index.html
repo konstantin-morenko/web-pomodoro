@@ -79,22 +79,12 @@
     </div>
     <div class="adjust-panel">
       <div class="label">
-	Параметр с очень длинным названием будет здесь
+	Громкость звуков
       </div>
       <div class="adjust">
-	<button>+</button>
-	<div class="value">XXXX XXXX XXXX</div>
-	<button>-</button>
-      </div>
-    </div>
-    <div class="adjust-panel">
-      <div class="label">
-	Параметр
-      </div>
-      <div class="adjust">
-	<button>+</button>
-	<div class="value">XXXX</div>
-	<button>-</button>
+	<button onclick="user.volume_dec()">-</button>
+	<div id="volume_value" class="value"></div>
+	<button onclick="user.volume_inc()">+</button>
       </div>
     </div>
   </div>
@@ -129,8 +119,9 @@
     <p>Исходный код: <a href="https://github.com/konstantin-morenko/web-pomodoro">GitHub</a></p>
   </div>
   <script>
-    timer.init();
+    init();
     document.addEventListener('keypress', keypress);
+    update_parameters();
   </script>
 </body>
 </html>
