@@ -298,6 +298,16 @@ function update_parameters() {
     document.getElementById("pre_notification").innerHTML = mins + ":" + (secs < 10 ? "0" : "") + secs;
 }
 
+function show_parameters() {
+    document.getElementById("preferences-panel").classList.remove("hidden");
+    document.getElementById("preferences-message").classList.add("hidden");
+}
+
+function hide_parameters() {
+    document.getElementById("preferences-panel").classList.add("hidden");
+    document.getElementById("preferences-message").classList.remove("hidden");
+}
+
 function update() {
     // update countdown
     document.getElementById("timer-counter-digital").innerHTML = countdown.digital();
@@ -324,6 +334,9 @@ function update() {
 	break;
     }
     document.title = symbol + " " + tm + " | " + l10n["intervals/" + timer._current] + " | Pomodoro Timer by Konstantin Morenko";
+
+    if(timer.status() != "reset") hide_parameters();
+    else show_parameters();
 }
 
 var user = {

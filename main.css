@@ -1,3 +1,7 @@
+.hidden {
+    display: none;
+}
+
 html {
     background: #171717;
     color: #ddd;

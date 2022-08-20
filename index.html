@@ -72,30 +72,35 @@
   </div>
   <div id="preferences">
     <header>Настройки</header>
-    <div class="button-panel">
-      <button id="button-wipe-all" onclick="user.wipe_all()">Сбросить все настройки</button>
-      <button id="button-check-alarm" onclick="user.check_alarm()">Проверить сигнал</button>
-      <button id="button-check-notification" onclick="user.check_notification()">Проверить уведомление</button>
+    <div id="preferences-panel">
+      <div class="button-panel">
+	<button id="button-wipe-all" onclick="user.wipe_all()">Сбросить все настройки</button>
+	<button id="button-check-alarm" onclick="user.check_alarm()">Проверить сигнал</button>
+	<button id="button-check-notification" onclick="user.check_notification()">Проверить уведомление</button>
+      </div>
+      <div class="adjust-panel">
+	<div class="label">
+	  Громкость всех звуков
+	</div>
+	<div class="adjust">
+	  <button onclick="user.volume_dec()">-</button>
+	  <div id="volume_value" class="value"></div>
+	  <button onclick="user.volume_inc()">+</button>
+	</div>
+      </div>
+      <div class="adjust-panel">
+	<div class="label">
+	  Уведомление перед окончанием рабочего интервала
+	</div>
+	<div class="adjust">
+	  <button onclick="user.prenotify_dec()">-</button>
+	  <div id="pre_notification" class="value"></div>
+	  <button onclick="user.prenotify_inc()">+</button>
+	</div>
+      </div>
     </div>
-    <div class="adjust-panel">
-      <div class="label">
-	Громкость всех звуков
-      </div>
-      <div class="adjust">
-	<button onclick="user.volume_dec()">-</button>
-	<div id="volume_value" class="value"></div>
-	<button onclick="user.volume_inc()">+</button>
-      </div>
-    </div>
-    <div class="adjust-panel">
-      <div class="label">
-	Уведомление перед окончанием рабочего интервала
-      </div>
-      <div class="adjust">
-	<button onclick="user.prenotify_dec()">-</button>
-	<div id="pre_notification" class="value"></div>
-	<button onclick="user.prenotify_inc()">+</button>
-      </div>
+    <div id="preferences-message">
+      <div style="text-align: center; margin: 16px auto;">Настройки доступны только когда таймер находится в режиме «Сброс»</div>
     </div>
   </div>
   <div id="method">
