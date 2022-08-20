@@ -166,6 +166,7 @@ var l10n = {
 var timer = {
     _current: "",
     _timers: {},
+    _prenotify: 0,
     init: function() {
 	timer.load();
 	timer.windup("work");
@@ -180,9 +181,17 @@ var timer = {
 			     "long": {"min": 15*60, "cur": 20*60, "max": 30*60, "step": 60}};
 	    timer.save();
 	}
+	if(localStorage.getItem("_prenotify")) {
+	    timer._prenotify = JSON.parse(localStorage.getItem("_prenotify"));
+	}
+	else {
+	    timer._prenotify = 180;
+	    timer.save();
+	}
     },
     save: function() {
 	localStorage.setItem("_timers", JSON.stringify(timer._timers));
+	localStorage.setItem("_prenotify", JSON.stringify(timer._prenotify));
     },
     windup: function(name) {
 	timer._current = name;
@@ -216,8 +225,25 @@ var timer = {
     status: function() {
 	return countdown.status();
     },
+    adj_prenotify: function(dir) {
+	if(dir == "+") {
+	    timer._prenotify += 30;
+	    if(timer._prenotify > 300) timer._prenotify = 300;
+	}
+	else {
+	    timer._prenotify -= 30;
+	    if(timer._prenotify < 30) timer._prenotify = 30;
+	}
+	timer.save();
+	update_parameters();
+    },
     tick: function() {
 	countdown.tick();
+	if(timer._current == "work") {
+	    if(countdown._left() == timer._prenotify) {
+		notify.notify("Скоро окончание интервала");
+	    }
+	}
 	if(countdown.status() == "finished") {
 	    timer.end();
 	}
@@ -267,6 +293,9 @@ if(Notification.permmission !== "granted") {
 
 function update_parameters() {
     document.getElementById("volume_value").innerHTML = player.config["volume"] + "&nbsp;/&nbsp;10";
+    var mins = Math.floor(timer._prenotify / 60);
+    var secs = timer._prenotify - mins * 60;
+    document.getElementById("pre_notification").innerHTML = mins + ":" + (secs < 10 ? "0" : "") + secs;
 }
 
 function update() {
@@ -369,6 +398,12 @@ var user = {
     volume_dec: function() {
 	player.volume_dec();
     },
+    prenotify_inc: function() {
+	timer.adj_prenotify("+");
+    },
+    prenotify_dec: function() {
+	timer.adj_prenotify("-");
+    }
 }
 
 function init() {
