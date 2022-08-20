@@ -266,7 +266,7 @@ if(Notification.permmission !== "granted") {
 }
 
 function update_parameters() {
-    document.getElementById("volume_value").innerHTML = player.config["volume"];
+    document.getElementById("volume_value").innerHTML = player.config["volume"] + "&nbsp;/&nbsp;10";
 }
 
 function update() {
