@@ -19,7 +19,8 @@ var player = {
 	"volume": 10
     },
     sounds: {
-	"end": new Audio("alarm.mp3")
+	"end": new Audio("alarm.mp3"),
+	"windup": new Audio("winding.mp3")
     },
 
     play: function(snd) {
@@ -206,6 +207,9 @@ var timer = {
 	update();
     },
     start: function() {
+	if(countdown.status() == "reset") {
+	    player.play("windup");
+	}
 	countdown.start();
     },
     pause: function() {
@@ -239,13 +243,13 @@ var timer = {
     },
     tick: function() {
 	countdown.tick();
-	if(timer._current == "work") {
+	if(countdown.status() == "finished") {
+	    timer.end();
+	}
+	else if(timer._current == "work") {
 	    if(countdown._left() == timer._prenotify) {
 		notify.notify("Скоро окончание интервала");
 	    }
-	}
-	if(countdown.status() == "finished") {
-	    timer.end();
 	}
 	update();
     },
