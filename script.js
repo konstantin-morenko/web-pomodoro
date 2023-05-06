@@ -151,6 +151,7 @@ var l10n = {
     "intervals/work": "Работа",
     "intervals/short": "Перерыв",
     "intervals/long": "Отдых",
+    "notify/pre/title": "Скоро окончание интервала",
     "notify/work-short/title": "Время сделать короткий перерыв!",
     "notify/work-short/body": "Отличная работа!",
     "notify/short-work/title": "Назад к работе!",
@@ -248,7 +249,7 @@ var timer = {
 	}
 	else if(timer._current == "work") {
 	    if(countdown._left() == timer._prenotify) {
-		notify.notify("Скоро окончание интервала");
+		notify.pre(countdown._left());
 	    }
 	}
 	update();
@@ -285,6 +286,9 @@ var notify = {
     },
     close: function() {
 	notify.notification.close();
+    },
+    pre: function(left) {
+	notify.notify(l10n["notify/pre/title"], left);
     },
     test: function() {
 	notify.notify(l10n["notify/test/title"], l10n["notify/test/body"]);
