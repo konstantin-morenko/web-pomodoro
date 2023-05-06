@@ -136,6 +136,12 @@
   <script>
     init();
     document.addEventListener('keypress', keypress);
+    window.addEventListener("beforeunload", function(e) {
+        status = countdown.status();
+	if(status == "active" || status == "paused") {
+	    e.preventDefault();
+	}
+    });
     update_parameters();
   </script>
   <!-- Yandex.Metrika counter -->
