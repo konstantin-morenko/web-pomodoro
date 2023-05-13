@@ -1,4 +1,13 @@
 
+function sec2str(sec) {
+    var str_min = Math.floor(sec / 60);
+    var str_sec = sec - str_min * 60;
+    var string = (str_min > 9 ? "" : "0") +
+	str_min + ":" +
+	(str_sec > 9 ? "" : "0") + str_sec;
+    return string;
+}
+
 function hl_buttons(block, active = false, cls = "active") {
     // turn off all buttons in block except active
     btns = document.getElementById(block).children;
@@ -152,6 +161,7 @@ var l10n = {
     "intervals/short": "Перерыв",
     "intervals/long": "Отдых",
     "notify/pre/title": "Скоро окончание интервала",
+    "notify/pre/body": "Осталось %l",
     "notify/work-short/title": "Время сделать короткий перерыв!",
     "notify/work-short/body": "Отличная работа!",
     "notify/short-work/title": "Назад к работе!",
@@ -162,7 +172,12 @@ var l10n = {
     "notify/long-work/body": "Еще один прорыв на сегодня!",
     "notify/strikes": "Страйки",
     "notify/test/title": "Тестовое уведомление",
-    "notify/test/body": "Так будут выглядеть уведомления"
+    "notify/test/body": "Так будут выглядеть уведомления",
+    sub: function(string) {
+	ret = l10n[string];
+	ret = ret.replace(/%l/, sec2str(countdown._left()));
+	return ret;
+    }
 }
 
 var timer = {
@@ -249,7 +264,7 @@ var timer = {
 	}
 	else if(timer._current == "work") {
 	    if(countdown._left() == timer._prenotify) {
-		notify.pre(countdown._left());
+		notify.pre();
 	    }
 	}
 	update();
@@ -287,8 +302,8 @@ var notify = {
     close: function() {
 	notify.notification.close();
     },
-    pre: function(left) {
-	notify.notify(l10n["notify/pre/title"], left);
+    pre: function() {
+	notify.notify(l10n["notify/pre/title"], l10n.sub("notify/pre/body"));
     },
     test: function() {
 	notify.notify(l10n["notify/test/title"], l10n["notify/test/body"]);
