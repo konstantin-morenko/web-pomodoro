@@ -40,9 +40,7 @@ var player = {
     },
 
     turn_off: function() {
-	var paused = false;
-	Object.entries(player.sounds).forEach(function([k, v]) { if(!v.paused) { paused = true; v.pause(); } })
-	return paused;
+	Object.entries(player.sounds).forEach(function([k, v]) { v.pause(); })
     },
     volume_inc: function() {
 	player.config["volume"] += 1;
@@ -396,7 +394,6 @@ var user = {
 	update();
     },
     start_pause: function() {
-	if(player.turn_off()) return;
 	switch(timer.status()) {
 	case "reset":
 	case "paused":
