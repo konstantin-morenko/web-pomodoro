@@ -394,6 +394,7 @@ var user = {
 	update();
     },
     start_pause: function() {
+	player.turn_off();
 	switch(timer.status()) {
 	case "reset":
 	case "paused":
