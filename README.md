@@ -10,3 +10,9 @@ Inspired by:
 In localization strings there are substitutions starting with a `%`
 and followed by letter:
 - `%l` - (left) replace with time left (string)
+
+# ChangeLog
+
+## 1.6
+
+- Adjusting only current timer value with `[` and `]` without saving.

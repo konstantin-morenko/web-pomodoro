@@ -115,6 +115,13 @@ var countdown = {
 	    timing.start();
 	}
     },
+    adj: function(adj) {
+	if(this._total + adj <= 30*60 && this._total + adj >= 1*60) {
+	    this._total += adj;
+	    if(this._current > this._total) this._current = this._total;
+	}
+	update();
+    },
     status: function() {
 	if(timing.counting()) {
 	    return 'active';
@@ -268,19 +275,22 @@ var timer = {
 	update();
     },
     adj_timer: function(dir, name = false) {
-	if(timer.status() != "reset") { return; }
 	if(!name) { name = timer._current; }
+
 	var adj = timer._timers[name].step;
 	if(dir == "-") { adj *= -1; }
-	timer._timers[name].cur += adj;
-	if(timer._timers[name].cur > timer._timers[name].max) {
-	    timer._timers[name].cur = timer._timers[name].max;
+
+	if(timer.status() == "reset") {
+	    timer._timers[name].cur += adj;
+	    if(timer._timers[name].cur > timer._timers[name].max) {
+		timer._timers[name].cur = timer._timers[name].max;
+	    }
+	    if(timer._timers[name].cur < timer._timers[name].min) {
+		timer._timers[name].cur = timer._timers[name].min;
+	    }
+	    timer.windup(timer._current);
+	    timer.save();
 	}
-	if(timer._timers[name].cur < timer._timers[name].min) {
-	    timer._timers[name].cur = timer._timers[name].min;
-	}
-	timer.windup(timer._current);
-	timer.save();
     }
 }
 
@@ -490,6 +500,12 @@ function keypress(e) {
 	break;
     case "Minus":
 	user.cur_dec();
+	break;
+    case "BracketLeft":
+	countdown.adj(+60);
+	break;
+    case "BracketRight":
+	countdown.adj(-60);
 	break;
     }
 }
