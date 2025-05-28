@@ -92,6 +92,10 @@ button:active {
 #log-content .record {
     margin: 4px 4px 0 30px;
 }
+.hotkeys-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 250px));
+}
 #keybindings ul {
     list-style-type: none;
 }
